@@ -50,7 +50,7 @@ class _SignInPageState extends State<SignInPage> {
 
     return AuthScaffold(
       title: 'Welcome back',
-      subtitle: 'Sign in to continue to SPORTSGURUKUL',
+      subtitle: 'Sign in to continue to SPORTS GURUKUL',
       child: Form(
         key: _formKey,
         child: Column(
