@@ -40,7 +40,7 @@ public class EmailService : IEmailService
     {
         var body = BuildHtml(
             $"Hi {firstName},",
-            "Please verify your email address to complete your SPORTSGURUKUL account setup.",
+            "Please verify your email address to complete your SPORTS GURUKUL account setup.",
             "Verify Email",
             verificationLink,
             "If you did not create an account, you can safely ignore this email.");

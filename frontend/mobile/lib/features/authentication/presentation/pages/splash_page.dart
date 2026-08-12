@@ -98,7 +98,7 @@ class _SplashPageState extends State<SplashPage>
                         curve: const Interval(0.25, 0.9, curve: Curves.easeOut),
                       ),
                       child: Text(
-                        'SPORTSGURUKUL',
+                        'SPORTS GURUKUL',
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w800,

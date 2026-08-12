@@ -81,7 +81,7 @@ class _DashboardView extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxl),
             AppSectionHeader(
               title: 'Platform',
-              subtitle: 'Choose how you want to join SPORTSGURUKUL',
+              subtitle: 'Choose how you want to join SPORTS GURUKUL',
             ),
             const _PlatformGrid(),
             const SizedBox(height: AppSpacing.xl),
@@ -132,7 +132,7 @@ class _WelcomeHero extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Your SPORTSGURUKUL dashboard is ready.',
+                  'Your SPORTS GURUKUL dashboard is ready.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.onBrand.withValues(alpha: 0.85),
                   ),

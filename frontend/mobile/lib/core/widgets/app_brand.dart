@@ -44,7 +44,7 @@ class AppBrand extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'SPORTSGURUKUL',
+              'SPORTS GURUKUL',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.4,
