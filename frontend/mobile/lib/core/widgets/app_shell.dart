@@ -13,10 +13,7 @@ import 'status_badge.dart';
 
 /// A section rendered inside the [AppShell] content area.
 class AppShellDestination {
-  const AppShellDestination({
-    required this.label,
-    required this.builder,
-  });
+  const AppShellDestination({required this.label, required this.builder});
 
   final String label;
   final WidgetBuilder builder;
@@ -70,10 +67,10 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: 72,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: AppSpacing.xs),
-          child: AppBrand(showWordmark: false, tileSize: 44, iconSize: 28),
+        toolbarHeight: 64,
+        leadingWidth: 56,
+        leading: const Center(
+          child: AppBrand(showWordmark: false, header: true, iconSize: 32),
         ),
         title: Text(widget.destinations[_index].label),
         actions: [

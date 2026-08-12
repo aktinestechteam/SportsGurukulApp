@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_badge.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/app_shell.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_stat_card.dart';
 import '../../domain/entities/user.dart';
 import '../providers/auth_provider.dart';
@@ -78,18 +79,18 @@ class _DashboardView extends StatelessWidget {
             ),
             _AccountStats(user: user),
             const SizedBox(height: AppSpacing.xxl),
+            AppSectionHeader(
+              title: 'Platform',
+              subtitle: 'Choose how you want to join SPORTSGURUKUL',
+            ),
+            const _PlatformGrid(),
+            const SizedBox(height: AppSpacing.xl),
             AppSectionHeader(title: 'Quick Actions', subtitle: 'Common tasks'),
             _QuickActions(
               onChangePassword: () => context.push('/change-password'),
               onLogout: () => context.read<AuthProvider>().signOut(),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            AppSectionHeader(
-              title: 'Platform',
-              subtitle: 'Sports modules are under development',
-            ),
-            const _ComingSoonGrid(),
-            const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
@@ -369,14 +370,24 @@ class _ActionTile extends StatelessWidget {
   }
 }
 
-class _ComingSoonGrid extends StatelessWidget {
-  const _ComingSoonGrid();
+class _PlatformGrid extends StatelessWidget {
+  const _PlatformGrid();
 
-  static const _modules = [
-    (Icons.school_outlined, 'Academy'),
-    (Icons.directions_run, 'Athlete'),
-    (Icons.health_and_safety_outlined, 'Diet & Health'),
-    (Icons.bar_chart, 'Analytics'),
+  static const List<(IconData, String, String, String?)> _options = [
+    (
+      Icons.school_outlined,
+      'Register Academy',
+      'Set up a new academy profile',
+      null,
+    ),
+    (Icons.groups_outlined, 'Join Academy', 'Join an existing academy', null),
+    (Icons.sports_outlined, 'Coach Registration', 'Register as a coach', null),
+    (
+      Icons.directions_run,
+      'Athlete Registration',
+      'Register as an athlete',
+      null,
+    ),
   ];
 
   @override
@@ -398,11 +409,19 @@ class _ComingSoonGrid extends StatelessWidget {
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
           children: [
-            for (final (icon, label) in _modules)
+            for (final (icon, title, subtitle, route) in _options)
               SizedBox(
                 width: itemWidth,
                 child: AppCard(
+                  variant: AppCardVariant.interactive,
                   padding: const EdgeInsets.all(AppSpacing.lg),
+                  onTap: route != null
+                      ? () => context.push(route)
+                      : () => AppSnackbar.show(
+                          context,
+                          '$title is coming soon',
+                          type: AppFeedbackType.info,
+                        ),
                   child: Row(
                     children: [
                       Container(
@@ -423,22 +442,21 @@ class _ComingSoonGrid extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              label,
+                              title,
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: AppSpacing.xs),
-                            AppBadge(
-                              label: 'Coming soon',
-                              compact: true,
-                              backgroundColor: scheme.surfaceContainerHighest,
-                              foregroundColor: scheme.onSurfaceVariant,
+                            Text(
+                              subtitle,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),
                       ),
                       Icon(
-                        Icons.arrow_forward,
+                        Icons.chevron_right,
                         size: 18,
                         color: scheme.outline,
                       ),
@@ -452,5 +470,3 @@ class _ComingSoonGrid extends StatelessWidget {
     );
   }
 }
-
-
