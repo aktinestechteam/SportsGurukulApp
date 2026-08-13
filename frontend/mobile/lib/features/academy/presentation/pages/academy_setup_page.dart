@@ -42,6 +42,7 @@ class _AcademySetupPageState extends State<AcademySetupPage> {
   bool _isPublic = false;
   bool _loading = false;
   bool _editMode = false;
+  bool _submitting = false;
 
   List<AcademyBranchInput> _branches = [];
   List<AcademySportInput> _sports = [];
@@ -165,54 +166,62 @@ class _AcademySetupPageState extends State<AcademySetupPage> {
   }
 
   Future<void> _submit() async {
-    FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) {
+    if (_submitting) {
       return;
     }
+    _submitting = true;
+    try {
+      FocusScope.of(context).unfocus();
+      if (!_formKey.currentState!.validate()) {
+        return;
+      }
 
-    final provider = context.read<AcademyProvider>();
-    final input = AcademyRequestInput(
-      name: _nameController.text.trim(),
-      profile: _optional(_profileController.text),
-      contactEmail: _optional(_contactEmailController.text),
-      contactPhone: _optional(_contactPhoneController.text),
-      address: _optional(_addressController.text),
-      city: _optional(_cityController.text),
-      state: _optional(_stateController.text),
-      country: _optional(_countryController.text),
-      postalCode: _optional(_postalCodeController.text),
-      logoUrl: _optional(_logoUrlController.text),
-      isPublic: _isPublic,
-      branches: _branches,
-      sports: _sports,
-      facilities: _facilities,
-      memberships: _memberships,
-      workingHours: completeWorkingHours(_workingHours),
-    );
-
-    final success = _editMode
-        ? await provider.updateAcademy(widget.academyId!, input)
-        : await provider.createAcademy(input);
-
-    if (!mounted) {
-      return;
-    }
-
-    if (success) {
-      AppSnackbar.show(
-        context,
-        _editMode
-            ? 'Academy updated successfully.'
-            : 'Academy registered successfully.',
-        type: AppFeedbackType.success,
+      final provider = context.read<AcademyProvider>();
+      final input = AcademyRequestInput(
+        name: _nameController.text.trim(),
+        profile: _optional(_profileController.text),
+        contactEmail: _optional(_contactEmailController.text),
+        contactPhone: _optional(_contactPhoneController.text),
+        address: _optional(_addressController.text),
+        city: _optional(_cityController.text),
+        state: _optional(_stateController.text),
+        country: _optional(_countryController.text),
+        postalCode: _optional(_postalCodeController.text),
+        logoUrl: _optional(_logoUrlController.text),
+        isPublic: _isPublic,
+        branches: _branches,
+        sports: _sports,
+        facilities: _facilities,
+        memberships: _memberships,
+        workingHours: completeWorkingHours(_workingHours),
       );
-      context.pop();
-    } else {
-      AppSnackbar.show(
-        context,
-        provider.errorMessage ?? 'Something went wrong. Please try again.',
-        type: AppFeedbackType.error,
-      );
+
+      final success = _editMode
+          ? await provider.updateAcademy(widget.academyId!, input)
+          : await provider.createAcademy(input);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (success) {
+        AppSnackbar.show(
+          context,
+          _editMode
+              ? 'Academy updated successfully.'
+              : 'Academy registered successfully.',
+          type: AppFeedbackType.success,
+        );
+        context.pop();
+      } else {
+        AppSnackbar.show(
+          context,
+          provider.errorMessage ?? 'Something went wrong. Please try again.',
+          type: AppFeedbackType.error,
+        );
+      }
+    } finally {
+      _submitting = false;
     }
   }
 

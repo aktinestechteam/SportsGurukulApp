@@ -102,6 +102,11 @@ class AcademyProvider extends ChangeNotifier {
       _errorMessage = e.friendlyMessage;
       notifyListeners();
       return false;
+    } catch (_) {
+      _status = AcademyStatus.error;
+      _errorMessage = 'Unable to register the academy. Please try again.';
+      notifyListeners();
+      return false;
     }
   }
 
@@ -124,6 +129,11 @@ class AcademyProvider extends ChangeNotifier {
       _errorMessage = e.friendlyMessage;
       notifyListeners();
       return false;
+    } catch (_) {
+      _status = AcademyStatus.error;
+      _errorMessage = 'Unable to save the academy. Please try again.';
+      notifyListeners();
+      return false;
     }
   }
 
@@ -141,6 +151,11 @@ class AcademyProvider extends ChangeNotifier {
     } on ApiException catch (e) {
       _status = AcademyStatus.error;
       _errorMessage = e.friendlyMessage;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _status = AcademyStatus.error;
+      _errorMessage = 'Unable to delete the academy. Please try again.';
       notifyListeners();
       return false;
     }

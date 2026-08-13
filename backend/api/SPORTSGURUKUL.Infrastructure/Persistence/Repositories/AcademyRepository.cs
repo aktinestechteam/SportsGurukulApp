@@ -52,7 +52,29 @@ public class AcademyRepository : IAcademyRepository
 
     public Task UpdateAsync(Academy academy, CancellationToken cancellationToken = default)
     {
-        _context.Academies.Update(academy);
+        _context.Entry(academy).State = EntityState.Modified;
+
+        foreach (var branch in academy.Branches)
+        {
+            _context.Entry(branch).State = EntityState.Added;
+        }
+        foreach (var sport in academy.Sports)
+        {
+            _context.Entry(sport).State = EntityState.Added;
+        }
+        foreach (var facility in academy.Facilities)
+        {
+            _context.Entry(facility).State = EntityState.Added;
+        }
+        foreach (var membership in academy.Memberships)
+        {
+            _context.Entry(membership).State = EntityState.Added;
+        }
+        foreach (var workingHour in academy.WorkingHours)
+        {
+            _context.Entry(workingHour).State = EntityState.Added;
+        }
+
         return Task.CompletedTask;
     }
 

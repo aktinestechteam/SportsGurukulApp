@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 
@@ -31,6 +32,12 @@ public class ExceptionHandlingMiddleware
             _logger.LogWarning("Validation failed: {Errors}", details);
             await WriteJsonAsync(context, StatusCodes.Status400BadRequest,
                 ApiResponse<object>.Fail("Validation failed.", ex.Errors));
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Concurrent update conflict detected.");
+            await WriteJsonAsync(context, StatusCodes.Status409Conflict,
+                ApiResponse<object>.Fail("This academy was updated by another request. Please try again."));
         }
         catch (Exception ex)
         {
