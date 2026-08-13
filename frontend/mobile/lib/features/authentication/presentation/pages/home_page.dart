@@ -13,7 +13,6 @@ import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_stat_card.dart';
-import '../../../academy/presentation/widgets/my_academies_section.dart';
 import '../../domain/entities/user.dart';
 import '../providers/auth_provider.dart';
 
@@ -85,8 +84,6 @@ class _DashboardView extends StatelessWidget {
               subtitle: 'Choose how you want to join SPORTS GURUKUL',
             ),
             const _PlatformGrid(),
-            const SizedBox(height: AppSpacing.xxl),
-            const MyAcademiesSection(),
             const SizedBox(height: AppSpacing.xxl),
             AppSectionHeader(title: 'Quick Actions', subtitle: 'Common tasks'),
             _QuickActions(
