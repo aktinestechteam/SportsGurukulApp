@@ -18,6 +18,13 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
+    public DbSet<Academy> Academies => Set<Academy>();
+    public DbSet<AcademyBranch> AcademyBranches => Set<AcademyBranch>();
+    public DbSet<AcademySport> AcademySports => Set<AcademySport>();
+    public DbSet<AcademyFacility> AcademyFacilities => Set<AcademyFacility>();
+    public DbSet<AcademyMembership> AcademyMemberships => Set<AcademyMembership>();
+    public DbSet<AcademyWorkingHour> AcademyWorkingHours => Set<AcademyWorkingHour>();
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => base.SaveChangesAsync(cancellationToken);
 

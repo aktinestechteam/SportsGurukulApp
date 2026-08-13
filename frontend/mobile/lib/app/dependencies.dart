@@ -2,6 +2,15 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../core/network/api_client.dart';
 import '../core/storage/token_storage.dart';
+import '../features/academy/data/datasources/academy_remote_data_source.dart';
+import '../features/academy/data/repositories/academy_repository_impl.dart';
+import '../features/academy/domain/repositories/academy_repository.dart';
+import '../features/academy/domain/usecases/create_academy.dart';
+import '../features/academy/domain/usecases/delete_academy.dart';
+import '../features/academy/domain/usecases/get_academies.dart';
+import '../features/academy/domain/usecases/get_academy.dart';
+import '../features/academy/domain/usecases/update_academy.dart';
+import '../features/academy/presentation/providers/academy_provider.dart';
 import '../features/authentication/data/datasources/auth_remote_data_source.dart';
 import '../features/authentication/data/repositories/auth_repository_impl.dart';
 import '../features/authentication/domain/repositories/auth_repository.dart';
@@ -22,6 +31,7 @@ class Dependencies {
   static late final TokenStorage tokenStorage;
   static late final ApiClient apiClient;
   static late final AuthProvider authProvider;
+  static late final AcademyProvider academyProvider;
 
   static void initialize() {
     tokenStorage = TokenStorage(storage: const FlutterSecureStorage());
@@ -47,6 +57,19 @@ class Dependencies {
       forgotPassword: ForgotPassword(repository),
       resetPassword: ResetPassword(repository),
       changePassword: ChangePassword(repository),
+    );
+
+    final academyDataSource = AcademyRemoteDataSource(apiClient: apiClient);
+    final AcademyRepository academyRepository = AcademyRepositoryImpl(
+      dataSource: academyDataSource,
+    );
+
+    academyProvider = AcademyProvider(
+      createAcademy: CreateAcademy(academyRepository),
+      getAcademies: GetAcademies(academyRepository),
+      getAcademy: GetAcademy(academyRepository),
+      updateAcademy: UpdateAcademy(academyRepository),
+      deleteAcademy: DeleteAcademy(academyRepository),
     );
 
     apiClient.onAuthExpired = authProvider.handleSessionExpired;

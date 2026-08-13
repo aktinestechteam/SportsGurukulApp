@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/academy/presentation/pages/academy_list_page.dart';
+import '../features/academy/presentation/pages/academy_setup_page.dart';
 import '../features/authentication/presentation/pages/change_password_page.dart';
 import '../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../features/authentication/presentation/pages/home_page.dart';
@@ -78,6 +80,20 @@ class AppRouter {
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsPage(),
+        ),
+        GoRoute(
+          path: '/academies',
+          builder: (context, state) => const AcademyListPage(),
+        ),
+        GoRoute(
+          path: '/academies/register',
+          builder: (context, state) => const AcademySetupPage(),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/edit',
+          builder: (context, state) => AcademySetupPage(
+            academyId: state.pathParameters['academyId'],
+          ),
         ),
       ],
     );

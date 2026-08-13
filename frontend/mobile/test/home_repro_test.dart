@@ -21,6 +21,9 @@ import 'package:sports_gurukul/features/authentication/domain/usecases/sign_out.
 import 'package:sports_gurukul/features/authentication/domain/usecases/sign_up.dart';
 import 'package:sports_gurukul/features/authentication/presentation/pages/home_page.dart';
 import 'package:sports_gurukul/features/authentication/presentation/providers/auth_provider.dart';
+import 'package:sports_gurukul/features/academy/presentation/providers/academy_provider.dart';
+
+import 'helpers/fake_academy_repository.dart';
 
 class _FakeRepo implements AuthRepository {
   _FakeRepo(this.user);
@@ -111,6 +114,9 @@ Widget _app(AuthProvider auth) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<AuthProvider>.value(value: auth),
+      ChangeNotifierProvider<AcademyProvider>.value(
+        value: buildAcademyProvider(),
+      ),
       ChangeNotifierProvider(create: (_) => ThemeController()),
     ],
     child: MaterialApp.router(
