@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/academy/domain/entities/academy.dart';
 import '../features/academy/presentation/pages/academy_list_page.dart';
 import '../features/academy/presentation/pages/academy_setup_page.dart';
 import '../features/authentication/presentation/pages/change_password_page.dart';
@@ -12,6 +13,9 @@ import '../features/authentication/presentation/pages/sign_in_page.dart';
 import '../features/authentication/presentation/pages/sign_up_page.dart';
 import '../features/authentication/presentation/pages/splash_page.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
+import '../features/coach/domain/entities/coach.dart';
+import '../features/coach/presentation/pages/add_coach_page.dart';
+import '../features/coach/presentation/pages/coaches_list_page.dart';
 import 'dependencies.dart';
 
 class AppRouter {
@@ -94,6 +98,32 @@ class AppRouter {
           builder: (context, state) => AcademySetupPage(
             academyId: state.pathParameters['academyId'],
           ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/coaches',
+          builder: (context, state) => CoachesListPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/coaches/add',
+          builder: (context, state) => AddCoachPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/coaches/:coachId/edit',
+          builder: (context, state) {
+            final extra =
+                state.extra as ({Academy? academy, Coach? coach});
+            return AddCoachPage(
+              academyId: state.pathParameters['academyId'] ?? '',
+              academy: extra.academy,
+              coach: extra.coach,
+            );
+          },
         ),
       ],
     );

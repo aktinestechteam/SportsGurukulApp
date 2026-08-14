@@ -36,4 +36,9 @@ public class RefreshTokenRepository : IRefreshTokenRepository
             .Where(t => t.UserId == userId && t.RevokedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, DateTime.UtcNow), cancellationToken);
     }
+
+    public Task RemoveByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+        => _context.RefreshTokens
+            .Where(t => t.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
 }

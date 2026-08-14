@@ -6,6 +6,10 @@ public interface IAcademyRepository
 {
     Task<List<Academy>> GetByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
 
+    Task<Academy?> GetByIdAsync(
+        Guid academyId,
+        CancellationToken cancellationToken = default);
+
     Task<Academy?> GetByIdForOwnerAsync(
         Guid academyId,
         Guid ownerUserId,

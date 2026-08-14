@@ -115,6 +115,7 @@ public class DbSeeder
             NormalizedEmail = DemoEmail.ToUpperInvariant(),
             MobileNumber = "+91 9876543210",
             NormalizedMobileNumber = "+91 9876543210",
+            PublicUserId = "SG-ADMIN-000001",
             PasswordHash = _passwordHasher.HashPassword(DemoPassword),
             AccountStatus = AccountStatus.Active,
             IsEmailVerified = true,

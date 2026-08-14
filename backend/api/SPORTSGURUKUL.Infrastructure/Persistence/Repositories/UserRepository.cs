@@ -34,6 +34,22 @@ public class UserRepository : IUserRepository
     public Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken = default)
         => _context.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
 
+    public Task<bool> MobileNumberExistsAsync(string normalizedMobileNumber, CancellationToken cancellationToken = default)
+        => _context.Users.AnyAsync(u => u.NormalizedMobileNumber == normalizedMobileNumber, cancellationToken);
+
+    public Task<bool> EmailExistsExcludingAsync(string normalizedEmail, Guid excludeUserId, CancellationToken cancellationToken = default)
+        => _context.Users.AnyAsync(
+            u => u.NormalizedEmail == normalizedEmail && u.Id != excludeUserId,
+            cancellationToken);
+
+    public Task<bool> MobileNumberExistsExcludingAsync(string normalizedMobileNumber, Guid excludeUserId, CancellationToken cancellationToken = default)
+        => _context.Users.AnyAsync(
+            u => u.NormalizedMobileNumber == normalizedMobileNumber && u.Id != excludeUserId,
+            cancellationToken);
+
+    public Task<bool> PublicUserIdExistsAsync(string publicUserId, CancellationToken cancellationToken = default)
+        => _context.Users.AnyAsync(u => u.PublicUserId == publicUserId, cancellationToken);
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
         => await _context.Users.AddAsync(user, cancellationToken);
 
@@ -48,4 +64,14 @@ public class UserRepository : IUserRepository
             .Where(ur => ur.UserId == userId && ur.IsActive)
             .Select(ur => ur.Role.Name)
             .ToListAsync(cancellationToken);
+
+    public Task RemoveRolesAsync(Guid userId, CancellationToken cancellationToken = default)
+        => _context.UserRoles
+            .Where(ur => ur.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+    public Task DeleteAsync(Guid userId, CancellationToken cancellationToken = default)
+        => _context.Users
+            .Where(u => u.Id == userId)
+            .ExecuteDeleteAsync(cancellationToken);
 }

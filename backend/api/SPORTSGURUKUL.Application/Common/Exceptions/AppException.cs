@@ -15,4 +15,5 @@ public class AppException : Exception
     public static AppException Forbidden(string message) => new(403, message);
     public static AppException NotFound(string message) => new(404, message);
     public static AppException Conflict(string message) => new(409, message);
+    public static AppException ServiceUnavailable(string message) => new(503, message);
 }

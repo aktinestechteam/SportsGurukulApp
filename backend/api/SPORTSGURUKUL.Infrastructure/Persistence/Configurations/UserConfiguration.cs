@@ -36,6 +36,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(30)
             .IsRequired();
 
+        builder.Property(u => u.PublicUserId)
+            .HasMaxLength(50)
+            .IsRequired();
+
         builder.Property(u => u.PasswordHash)
             .HasMaxLength(256)
             .IsRequired();
@@ -61,9 +65,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique()
             .HasDatabaseName("IX_Users_NormalizedMobileNumber");
 
+        builder.HasIndex(u => u.PublicUserId)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_PublicUserId");
+
         builder.HasMany(u => u.UserRoles)
             .WithOne(ur => ur.User)
             .HasForeignKey(ur => ur.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(u => u.Coaches)
+            .WithOne(c => c.User)
+            .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(u => u.RefreshTokens)

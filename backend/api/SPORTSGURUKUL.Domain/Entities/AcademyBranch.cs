@@ -17,4 +17,5 @@ public class AcademyBranch
     public DateTime UpdatedAt { get; set; }
 
     public Academy Academy { get; set; } = null!;
+    public ICollection<AcademyCoach> CoachAssociations { get; set; } = [];
 }

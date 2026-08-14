@@ -19,9 +19,8 @@ import '../../domain/entities/academy.dart';
 import '../providers/academy_provider.dart';
 
 /// Sample statistics rendered on academy cards. Hardcoded placeholders until
-/// the data model exposes real counts.
+/// the data model exposes real counts. Coach count is live from the API.
 const int _placeholderAthletes = 120;
-const int _placeholderCoaches = 12;
 const int _placeholderAchievements = 24;
 const int _placeholderEstYear = 2020;
 
@@ -84,7 +83,7 @@ class MyAcademiesSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppSectionHeader(
-              title: 'Register Academy',
+              title: 'Manage Academy',
               subtitle: 'Academies registered under your account',
               trailing: wide && showHeaderActions ? actions : null,
             ),
@@ -307,10 +306,7 @@ class _AcademyCard extends StatelessWidget {
             children: [
               for (final badge in _badges(scheme))
                 Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: badge,
-                  ),
+                  child: FittedBox(fit: BoxFit.scaleDown, child: badge),
                 ),
             ],
           ),
@@ -324,7 +320,7 @@ class _AcademyCard extends StatelessWidget {
             metrics: [
               _MetricData(
                 Icons.groups_outlined,
-                '$_placeholderCoaches',
+                '${academy.coachCount}',
                 'Coaches',
                 status.success,
               ),
@@ -357,15 +353,14 @@ class _AcademyCard extends StatelessWidget {
                 iconBackground: scheme.secondaryContainer,
                 title: 'Manage Coach',
                 subtitle: 'Manage your coaching staff',
-                onTap: () {
-                  AppSnackbar.show(
-                    context,
-                    'Coach management is coming soon.',
-                    type: AppFeedbackType.info,
-                    actionLabel: 'Dismiss',
-                    onAction: () =>
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                onTap: () async {
+                  await context.push(
+                    '/academies/${academy.id}/coaches',
+                    extra: academy,
                   );
+                  if (context.mounted) {
+                    context.read<AcademyProvider>().loadAcademies();
+                  }
                 },
               );
               final athleteTile = _ActionTile(
@@ -440,9 +435,7 @@ class _StatsPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final metric in metrics)
-            Expanded(
-              child: _Metric(metric: metric),
-            ),
+            Expanded(child: _Metric(metric: metric)),
         ],
       ),
     );

@@ -17,6 +17,7 @@ public sealed class AcademyResponse
     public Guid OwnerUserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public int CoachCount { get; set; }
 
     public List<AcademyBranchResponse> Branches { get; set; } = [];
     public List<AcademySportResponse> Sports { get; set; } = [];

@@ -8,4 +8,5 @@ public class AcademySport
     public DateTime CreatedAt { get; set; }
 
     public Academy Academy { get; set; } = null!;
+    public ICollection<CoachSport> CoachSports { get; set; } = [];
 }

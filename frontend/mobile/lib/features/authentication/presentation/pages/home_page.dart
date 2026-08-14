@@ -376,8 +376,8 @@ class _PlatformGrid extends StatelessWidget {
   static const List<(IconData, String, String, String?)> _options = [
     (
       Icons.school_outlined,
-      'Register Academy',
-      'Set up a new academy profile',
+      'Manage Academy',
+      'Manage academy profile',
       '/academies',
     ),
     (Icons.groups_outlined, 'Join Academy', 'Join an existing academy', null),

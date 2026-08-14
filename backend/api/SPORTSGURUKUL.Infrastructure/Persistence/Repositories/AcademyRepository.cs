@@ -21,9 +21,18 @@ public class AcademyRepository : IAcademyRepository
             .Include(a => a.Facilities)
             .Include(a => a.Memberships)
             .Include(a => a.WorkingHours)
+            .Include(a => a.CoachAssociations)
             .Where(a => a.OwnerUserId == ownerUserId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
+
+    public Task<Academy?> GetByIdAsync(
+        Guid academyId,
+        CancellationToken cancellationToken = default)
+        => _context.Academies
+            .Include(a => a.Branches)
+            .Include(a => a.Sports)
+            .FirstOrDefaultAsync(a => a.Id == academyId, cancellationToken);
 
     public Task<Academy?> GetByIdForOwnerAsync(
         Guid academyId,
@@ -35,6 +44,7 @@ public class AcademyRepository : IAcademyRepository
             .Include(a => a.Facilities)
             .Include(a => a.Memberships)
             .Include(a => a.WorkingHours)
+            .Include(a => a.CoachAssociations)
             .FirstOrDefaultAsync(
                 a => a.Id == academyId && a.OwnerUserId == ownerUserId,
                 cancellationToken);

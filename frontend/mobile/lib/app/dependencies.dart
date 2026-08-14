@@ -24,6 +24,14 @@ import '../features/authentication/domain/usecases/sign_in.dart';
 import '../features/authentication/domain/usecases/sign_out.dart';
 import '../features/authentication/domain/usecases/sign_up.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
+import '../features/coach/data/datasources/coach_remote_data_source.dart';
+import '../features/coach/data/repositories/coach_repository_impl.dart';
+import '../features/coach/domain/repositories/coach_repository.dart';
+import '../features/coach/domain/usecases/create_coach.dart';
+import '../features/coach/domain/usecases/delete_coach.dart';
+import '../features/coach/domain/usecases/get_coaches.dart';
+import '../features/coach/domain/usecases/update_coach.dart';
+import '../features/coach/presentation/providers/coach_provider.dart';
 
 class Dependencies {
   Dependencies._();
@@ -32,6 +40,7 @@ class Dependencies {
   static late final ApiClient apiClient;
   static late final AuthProvider authProvider;
   static late final AcademyProvider academyProvider;
+  static late final CoachProvider coachProvider;
 
   static void initialize() {
     tokenStorage = TokenStorage(storage: const FlutterSecureStorage());
@@ -70,6 +79,18 @@ class Dependencies {
       getAcademy: GetAcademy(academyRepository),
       updateAcademy: UpdateAcademy(academyRepository),
       deleteAcademy: DeleteAcademy(academyRepository),
+    );
+
+    final coachDataSource = CoachRemoteDataSource(apiClient: apiClient);
+    final CoachRepository coachRepository = CoachRepositoryImpl(
+      dataSource: coachDataSource,
+    );
+
+    coachProvider = CoachProvider(
+      createCoach: CreateCoach(coachRepository),
+      getCoaches: GetCoaches(coachRepository),
+      updateCoach: UpdateCoach(coachRepository),
+      deleteCoach: DeleteCoach(coachRepository),
     );
 
     apiClient.onAuthExpired = authProvider.handleSessionExpired;

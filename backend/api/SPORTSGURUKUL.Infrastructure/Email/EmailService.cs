@@ -24,7 +24,7 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public Task SendPasswordResetAsync(string toEmail, string firstName, string resetLink, CancellationToken cancellationToken = default)
+    public async Task SendPasswordResetAsync(string toEmail, string firstName, string resetLink, CancellationToken cancellationToken = default)
     {
         var body = BuildHtml(
             $"Hi {firstName},",
@@ -33,10 +33,10 @@ public class EmailService : IEmailService
             resetLink,
             "If you did not request this, you can safely ignore this email.");
 
-        return SendAsync(toEmail, "SPORTSGURUKUL - Reset your password", body, cancellationToken);
+        await SendAsync(toEmail, "SPORTSGURUKUL - Reset your password", body, cancellationToken);
     }
 
-    public Task SendEmailVerificationAsync(string toEmail, string firstName, string verificationLink, CancellationToken cancellationToken = default)
+    public async Task SendEmailVerificationAsync(string toEmail, string firstName, string verificationLink, CancellationToken cancellationToken = default)
     {
         var body = BuildHtml(
             $"Hi {firstName},",
@@ -45,10 +45,33 @@ public class EmailService : IEmailService
             verificationLink,
             "If you did not create an account, you can safely ignore this email.");
 
-        return SendAsync(toEmail, "SPORTSGURUKUL - Verify your email", body, cancellationToken);
+        await SendAsync(toEmail, "SPORTSGURUKUL - Verify your email", body, cancellationToken);
     }
 
-    private async Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
+    public async Task<bool> SendCoachCredentialsAsync(
+        string toEmail,
+        string firstName,
+        string academyName,
+        string publicUserId,
+        string temporaryPassword,
+        string loginUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var body = BuildCredentialsHtml(
+            firstName,
+            academyName,
+            publicUserId,
+            temporaryPassword,
+            loginUrl);
+
+        return await SendAsync(
+            toEmail,
+            "Welcome to Sports Gurukul — Your Coach Account",
+            body,
+            cancellationToken);
+    }
+
+    private async Task<bool> SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
     {
         var provider = _options.Provider?.ToLowerInvariant();
 
@@ -56,16 +79,16 @@ public class EmailService : IEmailService
         {
             case "file":
                 await WriteToFileAsync(toEmail, subject, body, cancellationToken);
-                break;
+                return true;
             case "smtp":
                 await SendViaSmtpAsync(toEmail, subject, body, cancellationToken);
-                break;
+                return true;
             default:
                 _logger.LogWarning(
                     "Email provider '{Provider}' is not configured. Email to {ToEmail} was not sent.",
                     provider,
                     toEmail);
-                break;
+                return false;
         }
     }
 
@@ -130,6 +153,43 @@ public class EmailService : IEmailService
               <p>Or open this link:</p>
               <p><a href="{safeLink}">{safeLink}</a></p>
               <p style="color:#757575;font-size:12px;">{HtmlEncode(footer)}</p>
+            </div>
+            """;
+    }
+
+    private string BuildCredentialsHtml(
+        string firstName,
+        string academyName,
+        string publicUserId,
+        string temporaryPassword,
+        string loginUrl)
+    {
+        var safeLoginUrl = HtmlEncode(loginUrl);
+
+        return $"""
+            <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
+              <h2 style="color:#1a237e;">SPORTSGURUKUL</h2>
+              <p>Hi {HtmlEncode(firstName)},</p>
+              <p>Welcome to Sports Gurukul! {HtmlEncode(academyName)} has added you as a coach. Your temporary login credentials are below:</p>
+              <table style="border-collapse:collapse;margin:16px 0;">
+                <tr>
+                  <td style="padding:8px 16px;border:1px solid #e0e0e0;font-weight:bold;">User ID</td>
+                  <td style="padding:8px 16px;border:1px solid #e0e0e0;">{HtmlEncode(publicUserId)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 16px;border:1px solid #e0e0e0;font-weight:bold;">Temporary Password</td>
+                  <td style="padding:8px 16px;border:1px solid #e0e0e0;">{HtmlEncode(temporaryPassword)}</td>
+                </tr>
+              </table>
+              <p style="text-align:center;">
+                <a href="{safeLoginUrl}"
+                   style="background-color:#1a237e;color:#ffffff;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;">
+                  Sign in to Sports Gurukul
+                </a>
+              </p>
+              <p>Or open this link: <a href="{safeLoginUrl}">{safeLoginUrl}</a></p>
+              <p>Please sign in and change your password the first time you log in. For your security, this password will not be shown again.</p>
+              <p style="color:#757575;font-size:12px;">If you did not expect this email, you can safely ignore it.</p>
             </div>
             """;
     }

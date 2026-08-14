@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SPORTSGURUKUL.Application.Common.Interfaces;
 using SPORTSGURUKUL.Domain.Entities;
 
@@ -6,6 +7,8 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext, IUnitOfWork
 {
+    private IDbContextTransaction? _activeTransaction;
+
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
@@ -25,8 +28,41 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<AcademyMembership> AcademyMemberships => Set<AcademyMembership>();
     public DbSet<AcademyWorkingHour> AcademyWorkingHours => Set<AcademyWorkingHour>();
 
+    public DbSet<Coach> Coaches => Set<Coach>();
+    public DbSet<AcademyCoach> AcademyCoaches => Set<AcademyCoach>();
+    public DbSet<CoachSport> CoachSports => Set<CoachSport>();
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => base.SaveChangesAsync(cancellationToken);
+
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        _activeTransaction = await Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
+    {
+        if (_activeTransaction is null)
+        {
+            return;
+        }
+
+        await _activeTransaction.CommitAsync(cancellationToken);
+        await _activeTransaction.DisposeAsync();
+        _activeTransaction = null;
+    }
+
+    public async Task RollbackAsync(CancellationToken cancellationToken = default)
+    {
+        if (_activeTransaction is null)
+        {
+            return;
+        }
+
+        await _activeTransaction.RollbackAsync(cancellationToken);
+        await _activeTransaction.DisposeAsync();
+        _activeTransaction = null;
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
