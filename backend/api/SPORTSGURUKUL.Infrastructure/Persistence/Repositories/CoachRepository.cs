@@ -103,6 +103,13 @@ public class CoachRepository : ICoachRepository
             .Where(a => a.AcademyId == academyId && a.CoachId == coachId)
             .ExecuteDeleteAsync(cancellationToken);
 
+    public Task RemoveSportsAsync(
+        IEnumerable<Guid> sportIds,
+        CancellationToken cancellationToken = default)
+        => _context.CoachSports
+            .Where(c => sportIds.Contains(c.SportId))
+            .ExecuteDeleteAsync(cancellationToken);
+
     public async Task RemoveCoachAsync(Guid coachId, CancellationToken cancellationToken = default)
     {
         await _context.CoachSports

@@ -62,6 +62,14 @@ public interface ICoachRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Permanently removes every coach sport assignment whose sport belongs to
+    /// the given academy's sport set.
+    /// </summary>
+    Task RemoveSportsAsync(
+        IEnumerable<Guid> sportIds,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Permanently removes the coach profile and all of its sport assignments.
     /// </summary>
     Task RemoveCoachAsync(Guid coachId, CancellationToken cancellationToken = default);

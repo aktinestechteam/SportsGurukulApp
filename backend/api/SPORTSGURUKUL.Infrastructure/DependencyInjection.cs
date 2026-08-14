@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SPORTSGURUKUL.Application.Academies.Interfaces;
+using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Common;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
 using SPORTSGURUKUL.Application.Coaches.Interfaces;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<IAcademyRepository, AcademyRepository>();
         services.AddScoped<ICoachRepository, CoachRepository>();
+        services.AddScoped<IAthleteRepository, AthleteRepository>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ISecureTokenService, SecureTokenService>();

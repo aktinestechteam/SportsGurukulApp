@@ -22,6 +22,7 @@ public class AcademyRepository : IAcademyRepository
             .Include(a => a.Memberships)
             .Include(a => a.WorkingHours)
             .Include(a => a.CoachAssociations)
+            .Include(a => a.AthleteAssociations)
             .Where(a => a.OwnerUserId == ownerUserId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -45,6 +46,9 @@ public class AcademyRepository : IAcademyRepository
             .Include(a => a.Memberships)
             .Include(a => a.WorkingHours)
             .Include(a => a.CoachAssociations)
+                .ThenInclude(ca => ca.Coach)
+            .Include(a => a.AthleteAssociations)
+                .ThenInclude(aa => aa.Athlete)
             .FirstOrDefaultAsync(
                 a => a.Id == academyId && a.OwnerUserId == ownerUserId,
                 cancellationToken);
@@ -93,4 +97,43 @@ public class AcademyRepository : IAcademyRepository
         _context.Academies.Remove(academy);
         return Task.CompletedTask;
     }
+
+    public async Task RemoveAssociationsAsync(Guid academyId, CancellationToken cancellationToken = default)
+    {
+        await _context.AcademyAthletes
+            .Where(a => a.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await _context.AcademyCoaches
+            .Where(c => c.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task DeleteChildrenAsync(Guid academyId, CancellationToken cancellationToken = default)
+    {
+        await _context.AcademyWorkingHours
+            .Where(w => w.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await _context.AcademyMemberships
+            .Where(m => m.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await _context.AcademyFacilities
+            .Where(f => f.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await _context.AcademySports
+            .Where(s => s.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await _context.AcademyBranches
+            .Where(b => b.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public Task DeleteByIdAsync(Guid academyId, CancellationToken cancellationToken = default)
+        => _context.Academies
+            .Where(a => a.Id == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
 }

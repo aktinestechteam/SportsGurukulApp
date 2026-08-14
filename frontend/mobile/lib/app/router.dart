@@ -13,6 +13,9 @@ import '../features/authentication/presentation/pages/sign_in_page.dart';
 import '../features/authentication/presentation/pages/sign_up_page.dart';
 import '../features/authentication/presentation/pages/splash_page.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
+import '../features/athlete/domain/entities/athlete.dart';
+import '../features/athlete/presentation/pages/add_athlete_page.dart';
+import '../features/athlete/presentation/pages/athletes_list_page.dart';
 import '../features/coach/domain/entities/coach.dart';
 import '../features/coach/presentation/pages/add_coach_page.dart';
 import '../features/coach/presentation/pages/coaches_list_page.dart';
@@ -122,6 +125,32 @@ class AppRouter {
               academyId: state.pathParameters['academyId'] ?? '',
               academy: extra.academy,
               coach: extra.coach,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/academies/:academyId/athletes',
+          builder: (context, state) => AthletesListPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/athletes/add',
+          builder: (context, state) => AddAthletePage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/athletes/:athleteId/edit',
+          builder: (context, state) {
+            final extra =
+                state.extra as ({Academy? academy, Athlete? athlete});
+            return AddAthletePage(
+              academyId: state.pathParameters['academyId'] ?? '',
+              academy: extra.academy,
+              athlete: extra.athlete,
             );
           },
         ),

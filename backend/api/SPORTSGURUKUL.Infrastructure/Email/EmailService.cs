@@ -71,6 +71,30 @@ public class EmailService : IEmailService
             cancellationToken);
     }
 
+    public async Task<bool> SendAthleteCredentialsAsync(
+        string toEmail,
+        string firstName,
+        string academyName,
+        string publicUserId,
+        string temporaryPassword,
+        string loginUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var body = BuildCredentialsHtml(
+            firstName,
+            academyName,
+            publicUserId,
+            temporaryPassword,
+            loginUrl,
+            "athlete");
+
+        return await SendAsync(
+            toEmail,
+            "Welcome to Sports Gurukul — Your Athlete Account",
+            body,
+            cancellationToken);
+    }
+
     private async Task<bool> SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
     {
         var provider = _options.Provider?.ToLowerInvariant();
@@ -162,7 +186,8 @@ public class EmailService : IEmailService
         string academyName,
         string publicUserId,
         string temporaryPassword,
-        string loginUrl)
+        string loginUrl,
+        string role = "member")
     {
         var safeLoginUrl = HtmlEncode(loginUrl);
 
@@ -170,7 +195,7 @@ public class EmailService : IEmailService
             <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
               <h2 style="color:#1a237e;">SPORTSGURUKUL</h2>
               <p>Hi {HtmlEncode(firstName)},</p>
-              <p>Welcome to Sports Gurukul! {HtmlEncode(academyName)} has added you as a coach. Your temporary login credentials are below:</p>
+              <p>Welcome to Sports Gurukul! {HtmlEncode(academyName)} has added you as an {HtmlEncode(role)}. Your temporary login credentials are below:</p>
               <table style="border-collapse:collapse;margin:16px 0;">
                 <tr>
                   <td style="padding:8px 16px;border:1px solid #e0e0e0;font-weight:bold;">User ID</td>

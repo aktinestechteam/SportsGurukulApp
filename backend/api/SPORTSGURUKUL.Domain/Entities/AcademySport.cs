@@ -9,4 +9,5 @@ public class AcademySport
 
     public Academy Academy { get; set; } = null!;
     public ICollection<CoachSport> CoachSports { get; set; } = [];
+    public ICollection<AthleteSport> AthleteSports { get; set; } = [];
 }

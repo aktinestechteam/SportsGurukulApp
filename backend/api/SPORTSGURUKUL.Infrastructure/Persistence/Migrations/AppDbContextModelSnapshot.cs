@@ -89,6 +89,43 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.ToTable("Academies", (string)null);
                 });
 
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AcademyAthlete", b =>
+                {
+                    b.Property<Guid>("AcademyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AssignedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AcademyId", "AthleteId");
+
+                    b.HasIndex("AthleteId")
+                        .HasDatabaseName("IX_AcademyAthletes_AthleteId");
+
+                    b.HasIndex("BranchId")
+                        .HasDatabaseName("IX_AcademyAthletes_BranchId");
+
+                    b.ToTable("AcademyAthletes", (string)null);
+                });
+
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AcademyBranch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -321,6 +358,75 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_AcademyWorkingHours_AcademyId");
 
                     b.ToTable("AcademyWorkingHours", (string)null);
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Athlete", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("AgeGroup")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmergencyContact")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProfilePhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Athletes", (string)null);
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AthleteSport", b =>
+                {
+                    b.Property<Guid>("AthleteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("AthleteId", "SportId");
+
+                    b.HasIndex("SportId")
+                        .HasDatabaseName("IX_AthleteSports_SportId");
+
+                    b.ToTable("AthleteSports", (string)null);
                 });
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Coach", b =>
@@ -629,6 +735,32 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.Navigation("OwnerUser");
                 });
 
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AcademyAthlete", b =>
+                {
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.Academy", "Academy")
+                        .WithMany("AthleteAssociations")
+                        .HasForeignKey("AcademyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.Athlete", "Athlete")
+                        .WithMany("AcademyAssociations")
+                        .HasForeignKey("AthleteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.AcademyBranch", "Branch")
+                        .WithMany("AthleteAssociations")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Academy");
+
+                    b.Navigation("Athlete");
+
+                    b.Navigation("Branch");
+                });
+
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AcademyBranch", b =>
                 {
                     b.HasOne("SPORTSGURUKUL.Domain.Entities.Academy", "Academy")
@@ -708,6 +840,36 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Academy");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Athlete", b =>
+                {
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.User", "User")
+                        .WithMany("Athletes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AthleteSport", b =>
+                {
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.Athlete", "Athlete")
+                        .WithMany("Sports")
+                        .HasForeignKey("AthleteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.AcademySport", "Sport")
+                        .WithMany("AthleteSports")
+                        .HasForeignKey("SportId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Athlete");
+
+                    b.Navigation("Sport");
                 });
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Coach", b =>
@@ -794,6 +956,8 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Academy", b =>
                 {
+                    b.Navigation("AthleteAssociations");
+
                     b.Navigation("Branches");
 
                     b.Navigation("CoachAssociations");
@@ -809,12 +973,23 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AcademyBranch", b =>
                 {
+                    b.Navigation("AthleteAssociations");
+
                     b.Navigation("CoachAssociations");
                 });
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.AcademySport", b =>
                 {
+                    b.Navigation("AthleteSports");
+
                     b.Navigation("CoachSports");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Athlete", b =>
+                {
+                    b.Navigation("AcademyAssociations");
+
+                    b.Navigation("Sports");
                 });
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Coach", b =>
@@ -831,6 +1006,8 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Athletes");
+
                     b.Navigation("Coaches");
 
                     b.Navigation("EmailVerificationTokens");

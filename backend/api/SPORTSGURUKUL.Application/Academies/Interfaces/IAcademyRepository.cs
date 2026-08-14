@@ -25,4 +25,21 @@ public interface IAcademyRepository
     Task UpdateAsync(Academy academy, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(Academy academy, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes every athlete and coach association row for the given academy.
+    /// </summary>
+    Task RemoveAssociationsAsync(Guid academyId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes the academy's owned child rows (working hours, memberships,
+    /// facilities, sports and branches). Must be called after all athlete and
+    /// coach associations for the academy have been removed.
+    /// </summary>
+    Task DeleteChildrenAsync(Guid academyId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Permanently removes the academy row itself.
+    /// </summary>
+    Task DeleteByIdAsync(Guid academyId, CancellationToken cancellationToken = default);
 }

@@ -196,6 +196,7 @@ class Academy {
     this.createdAt = '',
     this.updatedAt = '',
     this.coachCount = 0,
+    this.athleteCount = 0,
     this.branches = const [],
     this.sports = const [],
     this.facilities = const [],
@@ -219,6 +220,7 @@ class Academy {
   final String createdAt;
   final String updatedAt;
   final int coachCount;
+  final int athleteCount;
   final List<AcademyBranch> branches;
   final List<AcademySport> sports;
   final List<AcademyFacility> facilities;
@@ -248,6 +250,7 @@ class Academy {
       createdAt: json['createdAt'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? '',
       coachCount: json['coachCount'] as int? ?? 0,
+      athleteCount: json['athleteCount'] as int? ?? 0,
       branches: (json['branches'] as List? ?? const [])
           .map((e) => AcademyBranch.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
@@ -283,6 +286,7 @@ class Academy {
     'createdAt': createdAt,
     'updatedAt': updatedAt,
     'coachCount': coachCount,
+    'athleteCount': athleteCount,
     'branches': branches.map((e) => e.toJson()).toList(),
     'sports': sports.map((e) => e.toJson()).toList(),
     'facilities': facilities.map((e) => e.toJson()).toList(),

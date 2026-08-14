@@ -32,6 +32,10 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<AcademyCoach> AcademyCoaches => Set<AcademyCoach>();
     public DbSet<CoachSport> CoachSports => Set<CoachSport>();
 
+    public DbSet<Athlete> Athletes => Set<Athlete>();
+    public DbSet<AcademyAthlete> AcademyAthletes => Set<AcademyAthlete>();
+    public DbSet<AthleteSport> AthleteSports => Set<AthleteSport>();
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => base.SaveChangesAsync(cancellationToken);
 

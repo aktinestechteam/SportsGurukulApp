@@ -19,8 +19,8 @@ import '../../domain/entities/academy.dart';
 import '../providers/academy_provider.dart';
 
 /// Sample statistics rendered on academy cards. Hardcoded placeholders until
-/// the data model exposes real counts. Coach count is live from the API.
-const int _placeholderAthletes = 120;
+/// the data model exposes real counts. Coach and athlete counts are live from
+/// the API.
 const int _placeholderAchievements = 24;
 const int _placeholderEstYear = 2020;
 
@@ -326,7 +326,7 @@ class _AcademyCard extends StatelessWidget {
               ),
               _MetricData(
                 Icons.directions_run_outlined,
-                '$_placeholderAthletes',
+                '${academy.athleteCount}',
                 'Athletes',
                 brand.teal,
               ),
@@ -369,15 +369,14 @@ class _AcademyCard extends StatelessWidget {
                 iconBackground: scheme.tertiaryContainer,
                 title: 'Manage Athlete',
                 subtitle: 'Manage your athletes & teams',
-                onTap: () {
-                  AppSnackbar.show(
-                    context,
-                    'Athlete management is coming soon.',
-                    type: AppFeedbackType.info,
-                    actionLabel: 'Dismiss',
-                    onAction: () =>
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                onTap: () async {
+                  await context.push(
+                    '/academies/${academy.id}/athletes',
+                    extra: academy,
                   );
+                  if (context.mounted) {
+                    context.read<AcademyProvider>().loadAcademies();
+                  }
                 },
               );
 

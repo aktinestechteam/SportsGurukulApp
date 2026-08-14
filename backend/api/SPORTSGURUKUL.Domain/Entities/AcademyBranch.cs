@@ -18,4 +18,5 @@ public class AcademyBranch
 
     public Academy Academy { get; set; } = null!;
     public ICollection<AcademyCoach> CoachAssociations { get; set; } = [];
+    public ICollection<AcademyAthlete> AthleteAssociations { get; set; } = [];
 }

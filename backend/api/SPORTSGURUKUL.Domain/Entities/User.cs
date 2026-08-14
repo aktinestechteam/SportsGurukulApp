@@ -30,6 +30,7 @@ public class User
     public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = [];
     public ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = [];
     public ICollection<Coach> Coaches { get; set; } = [];
+    public ICollection<Athlete> Athletes { get; set; } = [];
 
     public void Touch() => UpdatedAt = DateTime.UtcNow;
 }

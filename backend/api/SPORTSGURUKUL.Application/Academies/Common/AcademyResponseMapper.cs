@@ -24,6 +24,7 @@ public static class AcademyResponseMapper
             CreatedAt = academy.CreatedAt,
             UpdatedAt = academy.UpdatedAt,
             CoachCount = academy.CoachAssociations.Count,
+            AthleteCount = academy.AthleteAssociations.Count,
             Branches = academy.Branches.Select(MapBranch).ToList(),
             Sports = academy.Sports.Select(MapSport).ToList(),
             Facilities = academy.Facilities.Select(MapFacility).ToList(),

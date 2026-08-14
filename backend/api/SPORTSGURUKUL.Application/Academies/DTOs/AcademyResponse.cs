@@ -18,6 +18,7 @@ public sealed class AcademyResponse
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int CoachCount { get; set; }
+    public int AthleteCount { get; set; }
 
     public List<AcademyBranchResponse> Branches { get; set; } = [];
     public List<AcademySportResponse> Sports { get; set; } = [];

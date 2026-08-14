@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using SPORTSGURUKUL.Application.Academies.Commands;
 using SPORTSGURUKUL.Application.Academies.DTOs;
 using SPORTSGURUKUL.Application.Academies.Queries;
+using SPORTSGURUKUL.Application.Athletes.Commands;
+using SPORTSGURUKUL.Application.Athletes.DTOs;
+using SPORTSGURUKUL.Application.Athletes.Queries;
 using SPORTSGURUKUL.Application.Coaches.Commands;
 using SPORTSGURUKUL.Application.Coaches.DTOs;
 using SPORTSGURUKUL.Application.Coaches.Queries;
@@ -102,6 +105,50 @@ public class AcademiesController : ControllerBase
     {
         var result = await _mediator.Send(
             new DeleteAcademyCoachCommand(academyId, coachId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{academyId:guid}/athletes")]
+    public async Task<IActionResult> CreateAthlete(
+        Guid academyId,
+        [FromBody] CreateAthleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CreateAcademyAthleteCommand(academyId, request),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{academyId:guid}/athletes")]
+    public async Task<IActionResult> GetAthletes(Guid academyId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetAcademyAthletesQuery(academyId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("{academyId:guid}/athletes/{athleteId:guid}")]
+    public async Task<IActionResult> UpdateAthlete(
+        Guid academyId,
+        Guid athleteId,
+        [FromBody] CreateAthleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new UpdateAcademyAthleteCommand(academyId, athleteId, request),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpDelete("{academyId:guid}/athletes/{athleteId:guid}")]
+    public async Task<IActionResult> DeleteAthlete(
+        Guid academyId,
+        Guid athleteId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new DeleteAcademyAthleteCommand(academyId, athleteId),
             cancellationToken);
         return Ok(result);
     }

@@ -11,6 +11,14 @@ import '../features/academy/domain/usecases/get_academies.dart';
 import '../features/academy/domain/usecases/get_academy.dart';
 import '../features/academy/domain/usecases/update_academy.dart';
 import '../features/academy/presentation/providers/academy_provider.dart';
+import '../features/athlete/data/datasources/athlete_remote_data_source.dart';
+import '../features/athlete/data/repositories/athlete_repository_impl.dart';
+import '../features/athlete/domain/repositories/athlete_repository.dart';
+import '../features/athlete/domain/usecases/create_athlete.dart';
+import '../features/athlete/domain/usecases/delete_athlete.dart';
+import '../features/athlete/domain/usecases/get_athletes.dart';
+import '../features/athlete/domain/usecases/update_athlete.dart';
+import '../features/athlete/presentation/providers/athlete_provider.dart';
 import '../features/authentication/data/datasources/auth_remote_data_source.dart';
 import '../features/authentication/data/repositories/auth_repository_impl.dart';
 import '../features/authentication/domain/repositories/auth_repository.dart';
@@ -41,6 +49,7 @@ class Dependencies {
   static late final AuthProvider authProvider;
   static late final AcademyProvider academyProvider;
   static late final CoachProvider coachProvider;
+  static late final AthleteProvider athleteProvider;
 
   static void initialize() {
     tokenStorage = TokenStorage(storage: const FlutterSecureStorage());
@@ -91,6 +100,18 @@ class Dependencies {
       getCoaches: GetCoaches(coachRepository),
       updateCoach: UpdateCoach(coachRepository),
       deleteCoach: DeleteCoach(coachRepository),
+    );
+
+    final athleteDataSource = AthleteRemoteDataSource(apiClient: apiClient);
+    final AthleteRepository athleteRepository = AthleteRepositoryImpl(
+      dataSource: athleteDataSource,
+    );
+
+    athleteProvider = AthleteProvider(
+      createAthlete: CreateAthlete(athleteRepository),
+      getAthletes: GetAthletes(athleteRepository),
+      updateAthlete: UpdateAthlete(athleteRepository),
+      deleteAthlete: DeleteAthlete(athleteRepository),
     );
 
     apiClient.onAuthExpired = authProvider.handleSessionExpired;

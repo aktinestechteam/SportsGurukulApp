@@ -9,8 +9,14 @@ public class AppOptions
     /// <summary>Base login URL included in account invitation emails.</summary>
     public string LoginBaseUrl { get; set; } = string.Empty;
 
-    /// <summary>Prefix used when generating the public user identifier.</summary>
+    /// <summary>Prefix used when generating the public user identifier for coaches.</summary>
     public string UserIdPrefix { get; set; } = "SG-COACH";
+
+    /// <summary>Prefix used when generating the public user identifier for self-registered users.</summary>
+    public string UserUserIdPrefix { get; set; } = "SG-USER";
+
+    /// <summary>Prefix used when generating the public user identifier for academy athletes.</summary>
+    public string AthleteUserIdPrefix { get; set; } = "SG-ATH";
 
     /// <summary>Number of digits in the numeric suffix of the public user identifier.</summary>
     public int UserIdDigits { get; set; } = 6;
