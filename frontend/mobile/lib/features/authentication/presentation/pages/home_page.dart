@@ -84,7 +84,7 @@ class _DashboardView extends StatelessWidget {
               subtitle: 'Choose how you want to join SPORTS GURUKUL',
             ),
             const _PlatformGrid(),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
             AppSectionHeader(title: 'Quick Actions', subtitle: 'Common tasks'),
             _QuickActions(
               onChangePassword: () => context.push('/change-password'),
@@ -376,9 +376,9 @@ class _PlatformGrid extends StatelessWidget {
   static const List<(IconData, String, String, String?)> _options = [
     (
       Icons.school_outlined,
-      'Register Academy',
-      'Set up a new academy profile',
-      null,
+      'Manage Academy',
+      'Manage academy profile',
+      '/academies',
     ),
     (Icons.groups_outlined, 'Join Academy', 'Join an existing academy', null),
     (Icons.sports_outlined, 'Coach Registration', 'Register as a coach', null),

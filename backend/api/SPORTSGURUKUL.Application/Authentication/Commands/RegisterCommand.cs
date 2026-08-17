@@ -1,12 +1,15 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SPORTSGURUKUL.Application.Authentication.Common;
 using SPORTSGURUKUL.Application.Authentication.DTOs;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
+using SPORTSGURUKUL.Application.Common.Options;
 using SPORTSGURUKUL.Domain.Entities;
 using SPORTSGURUKUL.Domain.Enums;
 
@@ -57,23 +60,31 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
 
 public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiResponse<UserResponse>>
 {
+    private const int MaxPublicUserIdAttempts = 5;
+
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IPublicUserIdGenerator _publicUserIdGenerator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly AppOptions _appOptions;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IPasswordHasher passwordHasher,
+        IPublicUserIdGenerator publicUserIdGenerator,
         IUnitOfWork unitOfWork,
+        IOptions<AppOptions> appOptions,
         ILogger<RegisterCommandHandler> logger)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _passwordHasher = passwordHasher;
+        _publicUserIdGenerator = publicUserIdGenerator;
         _unitOfWork = unitOfWork;
+        _appOptions = appOptions.Value;
         _logger = logger;
     }
 
@@ -92,6 +103,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
 
         var now = DateTime.UtcNow;
         var userId = Guid.NewGuid();
+        var publicUserId = await GenerateUniquePublicUserIdAsync(cancellationToken);
+
         var user = new User
         {
             Id = userId,
@@ -101,6 +114,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
             NormalizedEmail = normalizedEmail,
             MobileNumber = command.MobileNumber.Trim(),
             NormalizedMobileNumber = command.MobileNumber.Trim().ToUpperInvariant(),
+            PublicUserId = publicUserId,
             PasswordHash = _passwordHasher.HashPassword(command.Password),
             AccountStatus = AccountStatus.Active,
             IsEmailVerified = false,
@@ -120,10 +134,36 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
         await _userRepository.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("User {UserId} registered successfully", user.Id);
+        _logger.LogInformation(
+            "User {UserId} ({PublicUserId}) registered successfully",
+            user.Id,
+            user.PublicUserId);
 
         return ApiResponse<UserResponse>.Ok(
             UserResponseMapper.Map(user),
             "Registration successful. Please sign in.");
+    }
+
+    private async Task<string> GenerateUniquePublicUserIdAsync(CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; attempt <= MaxPublicUserIdAttempts; attempt++)
+        {
+            var candidate = await _publicUserIdGenerator.GenerateAsync(
+                _appOptions.UserUserIdPrefix,
+                cancellationToken);
+
+            if (!await _userRepository.PublicUserIdExistsAsync(candidate, cancellationToken))
+            {
+                return candidate;
+            }
+
+            _logger.LogWarning(
+                "Public user id collision for prefix {Prefix} on attempt {Attempt}; retrying.",
+                _appOptions.UserUserIdPrefix,
+                attempt);
+        }
+
+        throw AppException.ServiceUnavailable(
+            "Registration could not be completed because a unique user identifier could not be generated. Please try again.");
     }
 }

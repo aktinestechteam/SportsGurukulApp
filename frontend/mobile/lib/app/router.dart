@@ -1,5 +1,8 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/academy/domain/entities/academy.dart';
+import '../features/academy/presentation/pages/academy_list_page.dart';
+import '../features/academy/presentation/pages/academy_setup_page.dart';
 import '../features/authentication/presentation/pages/change_password_page.dart';
 import '../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../features/authentication/presentation/pages/home_page.dart';
@@ -10,6 +13,12 @@ import '../features/authentication/presentation/pages/sign_in_page.dart';
 import '../features/authentication/presentation/pages/sign_up_page.dart';
 import '../features/authentication/presentation/pages/splash_page.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
+import '../features/athlete/domain/entities/athlete.dart';
+import '../features/athlete/presentation/pages/add_athlete_page.dart';
+import '../features/athlete/presentation/pages/athletes_list_page.dart';
+import '../features/coach/domain/entities/coach.dart';
+import '../features/coach/presentation/pages/add_coach_page.dart';
+import '../features/coach/presentation/pages/coaches_list_page.dart';
 import 'dependencies.dart';
 
 class AppRouter {
@@ -78,6 +87,72 @@ class AppRouter {
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsPage(),
+        ),
+        GoRoute(
+          path: '/academies',
+          builder: (context, state) => const AcademyListPage(),
+        ),
+        GoRoute(
+          path: '/academies/register',
+          builder: (context, state) => const AcademySetupPage(),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/edit',
+          builder: (context, state) => AcademySetupPage(
+            academyId: state.pathParameters['academyId'],
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/coaches',
+          builder: (context, state) => CoachesListPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/coaches/add',
+          builder: (context, state) => AddCoachPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/coaches/:coachId/edit',
+          builder: (context, state) {
+            final extra =
+                state.extra as ({Academy? academy, Coach? coach});
+            return AddCoachPage(
+              academyId: state.pathParameters['academyId'] ?? '',
+              academy: extra.academy,
+              coach: extra.coach,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/academies/:academyId/athletes',
+          builder: (context, state) => AthletesListPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/athletes/add',
+          builder: (context, state) => AddAthletePage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/athletes/:athleteId/edit',
+          builder: (context, state) {
+            final extra =
+                state.extra as ({Academy? academy, Athlete? athlete});
+            return AddAthletePage(
+              academyId: state.pathParameters['academyId'] ?? '',
+              academy: extra.academy,
+              athlete: extra.athlete,
+            );
+          },
         ),
       ],
     );

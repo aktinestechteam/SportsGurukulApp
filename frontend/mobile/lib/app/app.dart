@@ -28,6 +28,9 @@ class _SportsGurukulAppState extends State<SportsGurukulApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: Dependencies.authProvider),
+        ChangeNotifierProvider.value(value: Dependencies.academyProvider),
+        ChangeNotifierProvider.value(value: Dependencies.coachProvider),
+        ChangeNotifierProvider.value(value: Dependencies.athleteProvider),
         ChangeNotifierProvider(create: (_) => ThemeController()),
       ],
       child: Consumer<ThemeController>(

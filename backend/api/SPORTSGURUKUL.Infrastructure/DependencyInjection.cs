@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SPORTSGURUKUL.Application.Academies.Interfaces;
+using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Common;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common.Interfaces;
 using SPORTSGURUKUL.Application.Common.Options;
 using SPORTSGURUKUL.Domain.Entities;
@@ -34,12 +37,18 @@ public static class DependencyInjection
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+        services.AddScoped<IAcademyRepository, AcademyRepository>();
+        services.AddScoped<ICoachRepository, CoachRepository>();
+        services.AddScoped<IAthleteRepository, AthleteRepository>();
+        services.AddScoped<ICoachAthleteRepository, CoachAthleteRepository>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ISecureTokenService, SecureTokenService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ITokenPairService, TokenPairService>();
+        services.AddScoped<IPublicUserIdGenerator, PublicUserIdGenerator>();
+        services.AddScoped<ITemporaryPasswordGenerator, TemporaryPasswordGenerator>();
 
         return services;
     }
