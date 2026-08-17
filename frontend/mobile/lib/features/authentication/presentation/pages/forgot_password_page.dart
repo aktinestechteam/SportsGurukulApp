@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme_extensions.dart';
+import '../../../../core/theme/auth_palette.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -68,23 +69,32 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   AppTextField(
                     controller: _emailController,
                     label: 'Email',
-                    icon: Icons.mail_outline,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.email],
                     validator: validateEmail,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   AppButton(
                     label: 'Send Reset Link',
-                    icon: Icons.send_outlined,
                     loading: _loading,
                     onPressed: _submit,
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => context.go('/sign-in'),
-                    child: const Text('Back to Sign In'),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => context.go('/sign-in'),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Back to sign in',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AuthPalette.subtitle(context),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -100,16 +110,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       children: [
         Center(
           child: Container(
-            width: 84,
-            height: 84,
+            width: 64,
+            height: 64,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: status.successContainer,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.mark_email_read_outlined,
-              size: 40,
+              size: 32,
               color: status.success,
             ),
           ),
@@ -118,7 +128,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         Text(
           'If an account exists for this email, password reset instructions have been sent.',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AuthPalette.muted(context),
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         AppButton(

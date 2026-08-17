@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/app_ambient_background.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/flat_page.dart';
 import '../../domain/entities/academy.dart';
 import '../../domain/repositories/academy_repository.dart';
 import '../providers/academy_provider.dart';
@@ -233,15 +233,12 @@ class _AcademySetupPageState extends State<AcademySetupPage> {
       appBar: AppBar(
         title: Text(_editMode ? 'Edit Academy' : 'Register Academy'),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AppAmbientBackground()),
-          Positioned.fill(
-            child: _loading
-                ? const AppLoading(label: 'Loading academy...')
-                : Form(
-                    key: _formKey,
-                    child: SingleChildScrollView(
+      body: _loading
+          ? const AppLoading(label: 'Loading academy...')
+          : FlatPage(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
                       padding: AppBreakpoints.horizontalPadding(
                         context,
                       ).add(const EdgeInsets.symmetric(vertical: AppSpacing.xl)),
@@ -298,9 +295,7 @@ class _AcademySetupPageState extends State<AcademySetupPage> {
                       ),
                     ),
                   ),
-          ),
-        ],
-      ),
+            ),
     );
   }
 

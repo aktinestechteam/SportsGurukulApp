@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_motion.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
+import '../theme/auth_palette.dart';
 
 enum AppButtonVariant { primary, secondary, outlined, text, destructive }
+
+/// Deep hero-blue used for the secondary "Add" actions.
+const Color _spidermanBlue = Color(0xFF1B2A78);
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -39,16 +44,33 @@ class AppButton extends StatelessWidget {
         AppButtonVariant.primary => FilledButton(
           onPressed: enabled ? onPressed : null,
           autofocus: autofocus,
+          style: FilledButton.styleFrom(
+            backgroundColor: AuthPalette.red,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(borderRadius: AppRadii.br(6)),
+          ),
           child: child,
         ),
-        AppButtonVariant.secondary => FilledButton.tonal(
+        AppButtonVariant.secondary => FilledButton(
           onPressed: enabled ? onPressed : null,
           autofocus: autofocus,
+          style: FilledButton.styleFrom(
+            backgroundColor: _spidermanBlue,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(borderRadius: AppRadii.br(6)),
+          ),
           child: child,
         ),
         AppButtonVariant.outlined => OutlinedButton(
           onPressed: enabled ? onPressed : null,
           autofocus: autofocus,
+          style: OutlinedButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: AppRadii.br(6)),
+          ),
           child: child,
         ),
         AppButtonVariant.text => TextButton(
@@ -62,7 +84,7 @@ class AppButton extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
-            shape: RoundedRectangleBorder(borderRadius: AppRadii.brMedium),
+            shape: RoundedRectangleBorder(borderRadius: AppRadii.br(6)),
           ),
           child: child,
         ),
@@ -70,9 +92,27 @@ class AppButton extends StatelessWidget {
     );
   }
 
+  Color _labelColor(BuildContext context) {
+    return switch (variant) {
+      AppButtonVariant.primary => Colors.white,
+      AppButtonVariant.destructive =>
+        Theme.of(context).colorScheme.onError,
+      AppButtonVariant.secondary => Colors.white,
+      _ => Theme.of(context).colorScheme.primary,
+    };
+  }
+
+  TextStyle _labelStyle(BuildContext context) =>
+      GoogleFonts.barlowCondensed(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 2.0,
+        color: _labelColor(context),
+      );
+
   Widget _content(BuildContext context) {
     if (icon == null) {
-      return Text(label);
+      return Text(label, style: _labelStyle(context));
     }
     return Row(
       mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
@@ -80,26 +120,32 @@ class AppButton extends StatelessWidget {
       children: [
         Icon(icon, size: 20),
         const SizedBox(width: AppSpacing.xs),
-        Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+        Flexible(
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            style: _labelStyle(context),
+          ),
+        ),
       ],
     );
   }
 
   Widget _spinner(BuildContext context) {
     return SizedBox(
-      width: 22,
-      height: 22,
-      child: CircularProgressIndicator(
-        strokeWidth: 2.4,
-        color: switch (variant) {
-          AppButtonVariant.primary || AppButtonVariant.destructive => Theme.of(
-            context,
-          ).colorScheme.onPrimary,
-          AppButtonVariant.secondary => Theme.of(
-            context,
-          ).colorScheme.onSecondaryContainer,
-          _ => Theme.of(context).colorScheme.primary,
-        },
+      width: 18,
+      height: 18,
+      child: CircularProgressIndicator.adaptive(
+        strokeWidth: 2,
+        valueColor: AlwaysStoppedAnimation(
+          switch (variant) {
+            AppButtonVariant.primary ||
+            AppButtonVariant.secondary ||
+            AppButtonVariant.destructive =>
+              Colors.white,
+            _ => Theme.of(context).colorScheme.primary,
+          },
+        ),
       ),
     );
   }

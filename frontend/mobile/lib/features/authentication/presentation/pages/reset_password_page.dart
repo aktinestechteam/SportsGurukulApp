@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme_extensions.dart';
+import '../../../../core/theme/auth_palette.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_scaffold.dart';
@@ -101,7 +102,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newPassword],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             PasswordField(
               controller: _confirmPasswordController,
               label: 'Confirm New Password',
@@ -112,17 +113,27 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.newPassword],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AppButton(
               label: 'Reset Password',
-              icon: Icons.lock_reset,
               loading: _loading,
               onPressed: _submit,
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => context.go('/sign-in'),
-              child: const Text('Back to Sign In'),
+            const SizedBox(height: 18),
+            Center(
+              child: GestureDetector(
+                onTap: () => context.go('/sign-in'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Back to sign in',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AuthPalette.subtitle(context),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -145,16 +156,16 @@ class _SuccessView extends StatelessWidget {
       children: [
         Center(
           child: Container(
-            width: 84,
-            height: 84,
+            width: 64,
+            height: 64,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: status.successContainer,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              Icons.check_circle_outline,
-              size: 40,
+              Icons.check_rounded,
+              size: 32,
               color: status.success,
             ),
           ),
@@ -163,7 +174,9 @@ class _SuccessView extends StatelessWidget {
         Text(
           'Your password has been reset successfully. Please sign in.',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AuthPalette.muted(context),
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         AppButton(label: 'Go to Sign In', onPressed: onDone),

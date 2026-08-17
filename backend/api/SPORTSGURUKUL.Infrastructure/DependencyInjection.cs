@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,8 +28,16 @@ public static class DependencyInjection
         services.Configure<EmailOptions>(configuration.GetSection("Email"));
         services.Configure<AppOptions>(configuration.GetSection("App"));
 
+        // Allow switching to a local connection string via config flag or environment variable
+        var useLocal = configuration.GetValue<bool>("UseLocalDb")
+                       || Environment.GetEnvironmentVariable("USE_LOCAL_DB")?.ToLower() == "true";
+
+        var defaultConn = configuration.GetConnectionString("DefaultConnection");
+        var localConn = configuration.GetConnectionString("LocalConnection");
+        var selectedConn = useLocal ? (localConn ?? defaultConn) : defaultConn;
+
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(selectedConn));
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<DbSeeder>();

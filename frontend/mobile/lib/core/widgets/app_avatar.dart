@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme_extensions.dart';
+import '../theme/auth_palette.dart';
 
 class AppAvatar extends StatelessWidget {
   const AppAvatar({super.key, required this.name, this.size = 40});
@@ -10,7 +10,6 @@ class AppAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brand = BrandColors.of(context);
     final initials = _initials(name);
 
     return Container(
@@ -18,19 +17,8 @@ class AppAvatar extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        gradient: brand.heroGradient,
+        color: AuthPalette.red,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.22),
-          width: 1.4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: brand.indigoA.withValues(alpha: 0.3),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Text(
         initials,

@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_breakpoints.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_theme_extensions.dart';
-import '../../../../core/widgets/app_badge.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/app_section_header.dart';
+import '../../../../core/theme/auth_palette.dart';
 import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/app_snackbar.dart';
-import '../../../../core/widgets/app_stat_card.dart';
 import '../../domain/entities/user.dart';
 import '../providers/auth_provider.dart';
 
@@ -59,44 +55,147 @@ class _DashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = user?.firstName ?? 'there';
+    final name = user?.fullName ?? 'User';
     final role = user?.displayRole ?? 'User';
     final status = user?.accountStatus ?? 'Active';
 
-    return SingleChildScrollView(
-      padding: AppBreakpoints.horizontalPadding(
-        context,
-      ).add(const EdgeInsets.symmetric(vertical: AppSpacing.xl)),
-      child: AppBreakpoints.constrain(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _WelcomeHero(name: name, role: role, status: status),
-            const SizedBox(height: AppSpacing.xl),
-            AppSectionHeader(
-              title: 'Overview',
-              subtitle: 'Your account at a glance',
+    return ColoredBox(
+      color: AuthPalette.bg(context),
+      child: Column(
+        children: [
+          Container(height: 3, color: AuthPalette.red),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: AppBreakpoints.horizontalPadding(context).add(
+                const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+              ),
+              child: AppBreakpoints.constrain(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _WelcomeHero(name: name, role: role, status: status),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    const _SectionHeader(
+                      title: 'Overview',
+                      subtitle: 'Your account at a glance',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _AccountStats(user: user),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    const _SectionHeader(
+                      title: 'Platform',
+                      subtitle: 'Choose how you want to join SPORTS GURUKUL',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _PlatformGrid(),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    const _SectionHeader(
+                      title: 'Quick Actions',
+                      subtitle: 'Common tasks',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _QuickActions(
+                      onChangePassword: () => context.push('/change-password'),
+                      onLogout: () => context.read<AuthProvider>().signOut(),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                ),
+              ),
             ),
-            _AccountStats(user: user),
-            const SizedBox(height: AppSpacing.xxl),
-            AppSectionHeader(
-              title: 'Platform',
-              subtitle: 'Choose how you want to join SPORTS GURUKUL',
-            ),
-            const _PlatformGrid(),
-            const SizedBox(height: AppSpacing.xxl),
-            AppSectionHeader(title: 'Quick Actions', subtitle: 'Common tasks'),
-            _QuickActions(
-              onChangePassword: () => context.push('/change-password'),
-              onLogout: () => context.read<AuthProvider>().signOut(),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Shared bits
+// ---------------------------------------------------------------------------
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2.0,
+                color: AuthPalette.textPrimary(context),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: AuthPalette.divider(context),
+              ),
+            ),
+          ],
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle!,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AuthPalette.subtitle(context),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Flat bordered surface. No gradients, no glow, no elevation.
+class _FlatPanel extends StatelessWidget {
+  const _FlatPanel({required this.child, this.onTap, this.padding});
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final panel = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: AuthPalette.surface(context),
+        borderRadius: AppRadii.brMedium,
+        border: Border.all(color: AuthPalette.border(context)),
+      ),
+      child: child,
+    );
+    if (onTap == null) {
+      return panel;
+    }
+    return ClipRRect(
+      borderRadius: AppRadii.brMedium,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(onTap: onTap, child: panel),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Welcome
+// ---------------------------------------------------------------------------
 
 class _WelcomeHero extends StatelessWidget {
   const _WelcomeHero({
@@ -111,76 +210,93 @@ class _WelcomeHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = AppBreakpoints.isDesktop(context);
-
-    return AppCard(
-      variant: AppCardVariant.brand,
-      padding: EdgeInsets.all(isDesktop ? AppSpacing.xxl : AppSpacing.xl),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 72),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome, $name',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.onBrand,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Your SPORTS GURUKUL dashboard is ready.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onBrand.withValues(alpha: 0.85),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    AppBadge(
-                      label: role,
-                      backgroundColor: AppColors.onBrand.withValues(
-                        alpha: 0.16,
-                      ),
-                      foregroundColor: AppColors.onBrand,
-                      icon: Icons.workspace_premium_outlined,
-                    ),
-                    AppBadge(
-                      label: status,
-                      backgroundColor: AppColors.onBrand.withValues(
-                        alpha: 0.16,
-                      ),
-                      foregroundColor: AppColors.onBrand,
-                      icon: Icons.check_circle_outline,
-                    ),
-                  ],
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'WELCOME,',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 3.0,
+            color: AuthPalette.red,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              name,
+              style: GoogleFonts.barlowCondensed(
+                fontSize: 40,
+                height: 1.0,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: AuthPalette.textPrimary(context),
+              ),
             ),
           ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.onBrand.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.onBrand.withValues(alpha: 0.18),
-                ),
-              ),
-              child: Icon(
-                Icons.insights_outlined,
-                size: 28,
-                color: AppColors.onBrand.withValues(alpha: 0.9),
-              ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Text(
+            'Your SPORTS GURUKUL dashboard is ready. Set up your academy, '
+            'coaches and athletes from here.',
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: AuthPalette.subtitle(context),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            _InfoPill(dot: AuthPalette.muted(context), label: role),
+            _InfoPill(dot: AuthPalette.red, label: status),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.dot, required this.label});
+
+  final Color dot;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: AuthPalette.surface(context),
+        borderRadius: AppRadii.brPill,
+        border: Border.all(color: AuthPalette.border(context)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AuthPalette.textPrimary(context),
             ),
           ),
         ],
@@ -188,6 +304,10 @@ class _WelcomeHero extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Account overview
+// ---------------------------------------------------------------------------
 
 class _AccountStats extends StatelessWidget {
   const _AccountStats({this.user});
@@ -198,27 +318,25 @@ class _AccountStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final role = user?.displayRole ?? 'User';
     final status = user?.accountStatus ?? 'Active';
-    final statusColors = StatusColors.of(context);
 
     final items = <Widget>[
-      AppStatCard(
-        label: 'Default Role',
+      _StatCell(
+        label: 'DEFAULT ROLE',
         value: role,
-        icon: Icons.workspace_premium_outlined,
         subtitle: 'Assigned by the platform',
+        icon: Icons.workspace_premium_outlined,
       ),
-      AppStatCard(
-        label: 'Account Status',
+      _StatCell(
+        label: 'ACCOUNT STATUS',
         value: status,
-        icon: Icons.verified_user_outlined,
-        accent: statusColors.success,
         subtitle: 'All systems operational',
+        icon: Icons.verified_user_outlined,
       ),
-      AppStatCard(
-        label: 'Modules',
+      _StatCell(
+        label: 'MODULES',
         value: '0',
-        icon: Icons.widgets_outlined,
         subtitle: 'Sports modules coming soon',
+        icon: Icons.widgets_outlined,
       ),
     ];
 
@@ -253,122 +371,85 @@ class _AccountStats extends StatelessWidget {
   }
 }
 
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.onChangePassword, required this.onLogout});
-
-  final VoidCallback onChangePassword;
-  final VoidCallback onLogout;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 700;
-        final actions = <Widget>[
-          _ActionTile(
-            icon: Icons.password_outlined,
-            title: 'Change Password',
-            subtitle: 'Keep your account secure',
-            onTap: onChangePassword,
-          ),
-          _ActionTile(
-            icon: Icons.help_outline,
-            title: 'Support',
-            subtitle: 'Help and documentation',
-            onTap: null,
-          ),
-          _ActionTile(
-            icon: Icons.logout,
-            title: 'Sign Out',
-            subtitle: 'End this session',
-            onTap: onLogout,
-          ),
-        ];
-
-        return Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
-          children: [
-            for (final action in actions)
-              SizedBox(
-                width: isWide
-                    ? (constraints.maxWidth - 2 * AppSpacing.md) / 3
-                    : constraints.maxWidth,
-                child: action,
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.title,
+class _StatCell extends StatelessWidget {
+  const _StatCell({
+    required this.label,
+    required this.value,
     required this.subtitle,
-    this.onTap,
+    required this.icon,
   });
 
-  final IconData icon;
-  final String title;
+  final String label;
+  final String value;
   final String subtitle;
-  final VoidCallback? onTap;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      variant: AppCardVariant.interactive,
+    return _FlatPanel(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      onTap: onTap,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: AppRadii.brMedium,
-            ),
-            child: Icon(
-              icon,
-              size: 22,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+          Row(
+            children: [
+              Icon(icon, size: 16, color: AuthPalette.red),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.6,
+                    color: AuthPalette.muted(context),
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: GoogleFonts.barlowCondensed(
+                  fontSize: 30,
+                  height: 1.0,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                  color: AuthPalette.textPrimary(context),
+                ),
+              ),
             ),
           ),
-          Icon(
-            Icons.chevron_right,
-            color: onTap == null
-                ? Theme.of(context).colorScheme.outline
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+          const SizedBox(height: AppSpacing.md),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: AuthPalette.divider(context),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: AuthPalette.subtitle(context),
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Platform
+// ---------------------------------------------------------------------------
 
 class _PlatformGrid extends StatelessWidget {
   const _PlatformGrid();
@@ -392,9 +473,6 @@ class _PlatformGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final brand = BrandColors.of(context);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 900
@@ -412,9 +490,11 @@ class _PlatformGrid extends StatelessWidget {
             for (final (icon, title, subtitle, route) in _options)
               SizedBox(
                 width: itemWidth,
-                child: AppCard(
-                  variant: AppCardVariant.interactive,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                child: _PlatformTile(
+                  icon: icon,
+                  title: title,
+                  subtitle: subtitle,
+                  soon: route == null,
                   onTap: route != null
                       ? () => context.push(route)
                       : () => AppSnackbar.show(
@@ -422,51 +502,223 @@ class _PlatformGrid extends StatelessWidget {
                           '$title is coming soon',
                           type: AppFeedbackType.info,
                         ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: brand.subtleGradient,
-                          borderRadius: AppRadii.brMedium,
-                          border: Border.all(
-                            color: scheme.primary.withValues(alpha: 0.14),
-                          ),
-                        ),
-                        child: Icon(icon, size: 22, color: scheme.primary),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              subtitle,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: scheme.outline,
-                      ),
-                    ],
-                  ),
                 ),
               ),
           ],
         );
       },
+    );
+  }
+}
+
+class _PlatformTile extends StatelessWidget {
+  const _PlatformTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    required this.soon,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool soon;
+
+  @override
+  Widget build(BuildContext context) {
+    return _FlatPanel(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 22, color: AuthPalette.red),
+              if (soon) ...[
+                const Spacer(),
+                Text(
+                  'SOON',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AuthPalette.muted(context),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+              color: AuthPalette.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: AuthPalette.subtitle(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Quick actions
+// ---------------------------------------------------------------------------
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.onChangePassword, required this.onLogout});
+
+  final VoidCallback onChangePassword;
+  final VoidCallback onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[
+      _ActionRow(
+        icon: Icons.password_outlined,
+        title: 'Change Password',
+        subtitle: 'Keep your account secure',
+        onTap: onChangePassword,
+      ),
+      _ActionRow(
+        icon: Icons.help_outline,
+        title: 'Support',
+        subtitle: 'Help and documentation',
+        onTap: () => AppSnackbar.show(
+          context,
+          'Support is coming soon',
+          type: AppFeedbackType.info,
+        ),
+      ),
+      _ActionRow(
+        icon: Icons.logout,
+        title: 'Sign Out',
+        subtitle: 'End this session',
+        onTap: onLogout,
+        destructive: true,
+      ),
+    ];
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AuthPalette.surface(context),
+            borderRadius: AppRadii.brMedium,
+            border: Border.all(color: AuthPalette.border(context)),
+          ),
+          child: ClipRRect(
+            borderRadius: AppRadii.brMedium,
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                children: [
+                  for (var i = 0; i < rows.length; i++) ...[
+                    if (i > 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AuthPalette.divider(context),
+                        ),
+                      ),
+                    rows[i],
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  const _ActionRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AuthPalette.red),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                      color: destructive
+                          ? AuthPalette.red
+                          : AuthPalette.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AuthPalette.subtitle(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AuthPalette.muted(context),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

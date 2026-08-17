@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/auth_palette.dart';
+
 /// Global enterprise text field. All application forms should use this.
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -48,7 +50,7 @@ class AppTextField extends StatelessWidget {
   }
 
   Widget _buildField(BuildContext context) {
-    final prefixIcon = icon == null ? null : Icon(icon, size: 22);
+    final prefixIcon = icon == null ? null : Icon(icon, size: 20);
     return TextFormField(
       controller: controller,
       initialValue: initialValue,
@@ -62,11 +64,57 @@ class AppTextField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        prefixIcon: prefixIcon,
+      decoration: _decoration(context, prefixIcon: prefixIcon),
+    );
+  }
+
+  InputDecoration _decoration(BuildContext context, {Widget? prefixIcon}) {
+    final scheme = Theme.of(context).colorScheme;
+    final radius = const BorderRadius.all(Radius.circular(6));
+    final enabledBorder = OutlineInputBorder(
+      borderRadius: radius,
+      borderSide: BorderSide(color: AuthPalette.border(context), width: 1),
+    );
+
+    return InputDecoration(
+      labelText: label,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      filled: true,
+      fillColor: AuthPalette.surface(context),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      labelStyle: TextStyle(
+        color: AuthPalette.subtitle(context),
+        fontSize: 13,
       ),
+      hintStyle: TextStyle(
+        color: AuthPalette.muted(context),
+        fontSize: 13,
+      ),
+      prefixIconColor: AuthPalette.subtitle(context),
+      suffixIconColor: AuthPalette.subtitle(context),
+      border: enabledBorder,
+      enabledBorder: enabledBorder,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: AuthPalette.red, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: scheme.error, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: scheme.error, width: 1.5),
+      ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(
+          color: AuthPalette.border(context).withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      errorStyle: TextStyle(color: scheme.error),
     );
   }
 }
@@ -86,6 +134,7 @@ class _ObscurableFieldState extends State<_ObscurableField> {
   @override
   Widget build(BuildContext context) {
     final parent = widget.parent;
+    final prefixIcon = parent.icon == null ? null : Icon(parent.icon, size: 20);
     return TextFormField(
       controller: parent.controller,
       initialValue: parent.initialValue,
@@ -99,19 +148,19 @@ class _ObscurableFieldState extends State<_ObscurableField> {
       validator: parent.validator,
       onChanged: parent.onChanged,
       onFieldSubmitted: parent.onFieldSubmitted,
-      decoration: InputDecoration(
-        labelText: parent.label,
-        hintText: parent.hintText,
-        prefixIcon: parent.icon == null ? null : Icon(parent.icon, size: 22),
+      decoration: parent._decoration(context, prefixIcon: prefixIcon).copyWith(
         suffixIcon: IconButton(
           onPressed: () => setState(() => _obscure = !_obscure),
           icon: Icon(
             _obscure
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            size: 22,
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            size: 18,
+            color: AuthPalette.subtitle(context),
           ),
           tooltip: _obscure ? 'Show password' : 'Hide password',
+          splashRadius: 18,
+          padding: EdgeInsets.zero,
         ),
       ),
     );

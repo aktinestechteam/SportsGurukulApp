@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/auth_palette.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../providers/auth_provider.dart';
@@ -80,7 +81,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.password],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             PasswordField(
               controller: _newPasswordController,
               label: 'New Password',
@@ -88,7 +89,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newPassword],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             PasswordField(
               controller: _confirmPasswordController,
               label: 'Confirm New Password',
@@ -99,17 +100,27 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.newPassword],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AppButton(
               label: 'Change Password',
-              icon: Icons.lock_reset,
               loading: _loading,
               onPressed: _submit,
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Cancel'),
+            const SizedBox(height: 18),
+            Center(
+              child: GestureDetector(
+                onTap: () => context.go('/home'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AuthPalette.subtitle(context),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

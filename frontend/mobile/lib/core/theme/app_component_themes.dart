@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_motion.dart';
 import 'app_radii.dart';
 import 'app_spacing.dart';
+import 'auth_palette.dart';
 
 /// Material 3 component themes shared by the light and dark themes.
 class AppComponentThemes {
@@ -322,7 +323,7 @@ class AppComponentThemes {
       ),
 
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: scheme.primary,
+        color: AuthPalette.red,
         linearTrackColor: scheme.surfaceContainerHighest,
         circularTrackColor: scheme.surfaceContainerHighest,
       ),
@@ -411,11 +412,11 @@ class AppComponentThemes {
 
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
-          color: isDark ? scheme.surfaceContainerHigh : const Color(0xFF232A45),
+          color: scheme.inverseSurface,
           borderRadius: AppRadii.br(AppRadii.small),
         ),
         textStyle: textTheme.bodySmall?.copyWith(
-          color: scheme.inversePrimary,
+          color: scheme.onInverseSurface,
           fontWeight: FontWeight.w500,
         ),
         waitDuration: AppMotion.fast,

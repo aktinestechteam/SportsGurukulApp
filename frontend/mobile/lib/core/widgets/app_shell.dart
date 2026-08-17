@@ -7,8 +7,8 @@ import '../theme/app_spacing.dart';
 import '../theme/theme_controller.dart';
 import 'app_ambient_background.dart';
 import 'app_avatar.dart';
-import 'app_brand.dart';
 import 'app_loading.dart';
+import 'sports_gurukul_wordmark.dart';
 import 'status_badge.dart';
 
 /// A section rendered inside the [AppShell] content area.
@@ -68,11 +68,8 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 64,
-        leadingWidth: 56,
-        leading: const Center(
-          child: AppBrand(showWordmark: false, header: true, iconSize: 32),
-        ),
-        title: Text(widget.destinations[_index].label),
+        titleSpacing: 20,
+        title: const SportsGurukulHeaderWordmark(),
         actions: [
           _ThemeToggleButton(),
           _ProfileMenuButton(shell: this),

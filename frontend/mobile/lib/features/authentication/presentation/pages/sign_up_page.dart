@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/auth_palette.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -95,7 +96,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: AppTextField(
                     controller: _firstNameController,
                     label: 'First Name',
-                    icon: Icons.person_outline,
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.givenName],
                     validator: (v) => validateRequired(v, field: 'First name'),
@@ -106,7 +106,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: AppTextField(
                     controller: _lastNameController,
                     label: 'Last Name',
-                    icon: Icons.person_outline,
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.familyName],
                     validator: (v) => validateRequired(v, field: 'Last name'),
@@ -114,27 +113,25 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AppTextField(
               controller: _emailController,
               label: 'Email',
-              icon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.email],
               validator: validateEmail,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AppTextField(
               controller: _mobileController,
               label: 'Mobile Number',
-              icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.telephoneNumber],
               validator: validateMobile,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             PasswordField(
               controller: _passwordController,
               label: 'Password',
@@ -142,7 +139,7 @@ class _SignUpPageState extends State<SignUpPage> {
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newPassword],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             PasswordField(
               controller: _confirmPasswordController,
               label: 'Confirm Password',
@@ -158,26 +155,54 @@ class _SignUpPageState extends State<SignUpPage> {
               value: _acceptTerms,
               onChanged: (value) =>
                   setState(() => _acceptTerms = value ?? false),
-              title: const Text('I accept the terms and conditions'),
+              activeColor: AuthPalette.red,
+              checkColor: Colors.white,
+              title: Text(
+                'I accept the terms and conditions',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AuthPalette.subtitle(context),
+                ),
+              ),
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 18),
             AppButton(
               label: 'Create Account',
-              icon: Icons.person_add_alt_1,
               loading: isLoading,
               onPressed: _submit,
             ),
             const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Already have an account?'),
-                TextButton(
-                  onPressed: () => context.go('/sign-in'),
-                  child: const Text('Sign In'),
+                Flexible(
+                  child: Text(
+                    'Already have an account?',
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AuthPalette.subtitle(context),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: GestureDetector(
+                    onTap: () => context.go('/sign-in'),
+                    child: Text(
+                      'Sign in',
+                      textAlign: TextAlign.left,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AuthPalette.red,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_motion.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_theme_extensions.dart';
-import '../../../../core/widgets/app_brand.dart';
+import '../../../../core/theme/auth_palette.dart';
+import '../../../../core/widgets/sports_gurukul_wordmark.dart';
 import '../providers/auth_provider.dart';
 
 class SplashPage extends StatefulWidget {
@@ -40,29 +39,11 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    final ambient = AmbientColors.of(context);
-
     return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ambient.top, ambient.bottom],
-          ),
-        ),
+      body: ColoredBox(
+        color: Theme.of(context).colorScheme.surface,
         child: Stack(
           children: [
-            Positioned(
-              top: -160,
-              right: -120,
-              child: _Orb(color: ambient.orbIndigo, size: 420),
-            ),
-            Positioned(
-              bottom: -200,
-              left: -140,
-              child: _Orb(color: ambient.orbViolet, size: 460),
-            ),
             SafeArea(
               child: Center(
                 child: Column(
@@ -84,68 +65,51 @@ class _SplashPageState extends State<SplashPage>
                             ),
                           ),
                         ),
-                        child: const AppBrand(
-                          showWordmark: false,
-                          tileSize: 88,
-                          iconSize: 56,
-                        ),
+                        child: const SportsGurukulWordmark(),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: 12),
                     FadeTransition(
                       opacity: CurvedAnimation(
                         parent: _controller,
-                        curve: const Interval(0.25, 0.9, curve: Curves.easeOut),
+                        curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
                       ),
                       child: Text(
-                        'SPORTS GURUKUL',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.6,
-                            ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    FadeTransition(
-                      opacity: CurvedAnimation(
-                        parent: _controller,
-                        curve: const Interval(0.5, 1, curve: Curves.easeOut),
-                      ),
-                      child: const SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(strokeWidth: 3),
+                        'TRAIN  ·  COMPETE  ·  EXCEL',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 3.0,
+                          color: AuthPalette.muted(context),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            Positioned(
+              bottom: 48,
+              left: 0,
+              right: 0,
+              child: FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: _controller,
+                  curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AuthPalette.red,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Orb extends StatelessWidget {
-  const _Orb({required this.color, required this.size});
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ),
         ),
       ),
     );

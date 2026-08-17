@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_breakpoints.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_theme_extensions.dart';
-import '../../../../core/widgets/app_brand.dart';
-import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/theme/auth_palette.dart';
+import '../../../../core/widgets/sports_gurukul_wordmark.dart';
 
-/// Premium authentication layout.
+/// Disciplined authentication layout.
 ///
-/// Renders a subtle brand-tinted gradient background with a soft accent glow,
-/// the SPORTSGURUKUL brand mark, and a frosted-glass panel around the form on
-/// tablet/desktop screens. The glass effect is skipped on phones for
-/// performance.
+/// A 3px primary stripe runs the full width along the very top. Below it the
+/// brand zone and form zone are stacked and centered vertically in the
+/// remaining space, with a thin divider between them. The form is constrained
+/// to 440px and centered on wider screens. No gradients, orbs, glows or
+/// elevated cards.
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
     super.key,
@@ -27,157 +25,95 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCompact = AppBreakpoints.isCompact(context);
-
-    final form = ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 440),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _AuthBrandHeader(),
-          const SizedBox(height: AppSpacing.xxl),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              subtitle!,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.xl),
-          child,
-        ],
-      ),
-    );
+    final minHeight = MediaQuery.of(context).size.height - 3;
 
     return Scaffold(
-      body: Stack(
+      backgroundColor: AuthPalette.bg(context),
+      body: Column(
         children: [
-          const Positioned.fill(child: _AuthBackground()),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.xxxl,
-                ),
-                child: isCompact
-                    ? form
-                    : GlassContainer(
-                        padding: const EdgeInsets.all(AppSpacing.xxl),
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        borderRadius: AppRadii.brGlass,
-                        child: form,
+          Container(
+            height: 3,
+            color: AuthPalette.red,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: minHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 32,
+                        ),
+                        child: Column(
+                          children: [
+                            const SportsGurukulWordmark(),
+                            const SizedBox(height: 8),
+                            Text(
+                              'TRAIN  ·  COMPETE  ·  EXCEL',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 3.0,
+                                color: AuthPalette.muted(context),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      Divider(
+                        color: AuthPalette.divider(context),
+                        height: 1,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 28,
+                        ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 440),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  title.toUpperCase(),
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.barlowCondensed(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                    color: AuthPalette.textPrimary(context),
+                                  ),
+                                ),
+                                if (subtitle != null) ...[
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    subtitle!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AuthPalette.subtitle(context),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 24),
+                                child,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AuthBrandHeader extends StatelessWidget {
-  const _AuthBrandHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Column(
-      children: [
-        const Center(
-          child: AppBrand(showWordmark: false, tileSize: 64, iconSize: 40),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          'SPORTSGURUKUL',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.4,
-          ),
-        ),
-        Text(
-          'Sports · Technology · Intelligence',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-            letterSpacing: 0.6,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AuthBackground extends StatelessWidget {
-  const _AuthBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final ambient = AmbientColors.of(context);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ambient.top, ambient.bottom],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -120,
-            right: -80,
-            child: _AccentOrb(
-              colors: [
-                scheme.primary.withValues(alpha: 0.14),
-                scheme.primary.withValues(alpha: 0),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: -160,
-            left: -100,
-            child: _AccentOrb(
-              colors: [
-                scheme.secondary.withValues(alpha: 0.10),
-                scheme.secondary.withValues(alpha: 0),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AccentOrb extends StatelessWidget {
-  const _AccentOrb({required this.colors});
-
-  final List<Color> colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 340,
-      height: 340,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: colors),
       ),
     );
   }

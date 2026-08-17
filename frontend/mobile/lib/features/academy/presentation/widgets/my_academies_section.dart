@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_theme_extensions.dart';
-import '../../../../core/widgets/app_badge.dart';
+import '../../../../core/theme/auth_palette.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/app_snackbar.dart';
-import '../../../../core/widgets/status_badge.dart';
 import '../../domain/entities/academy.dart';
 import '../providers/academy_provider.dart';
 
@@ -82,7 +78,7 @@ class MyAcademiesSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppSectionHeader(
+            _SectionHeader(
               title: 'Manage Academy',
               subtitle: 'Academies registered under your account',
               trailing: wide && showHeaderActions ? actions : null,
@@ -92,22 +88,19 @@ class MyAcademiesSection extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: AppButton(
+                      label: 'View All',
+                      variant: AppButtonVariant.outlined,
+                      icon: Icons.grid_view_outlined,
                       onPressed: () => context.push('/academies'),
-                      child: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('View All'),
-                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: FilledButton(
+                    child: AppButton(
+                      label: 'Add Academy',
+                      icon: Icons.add_business_outlined,
                       onPressed: () => context.push('/academies/register'),
-                      child: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('Add Academy'),
-                      ),
                     ),
                   ),
                 ],
@@ -127,6 +120,73 @@ class MyAcademiesSection extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.subtitle, this.trailing});
+
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = Text(
+      title.toUpperCase(),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 2.0,
+        color: AuthPalette.textPrimary(context),
+      ),
+    );
+    final subtitleCol = subtitle == null
+        ? null
+        : Text(
+            subtitle!,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AuthPalette.subtitle(context),
+            ),
+          );
+
+    if (trailing != null) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [label, ?subtitleCol],
+          ),
+          const Spacer(),
+          trailing!,
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            label,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: AuthPalette.divider(context),
+              ),
+            ),
+          ],
+        ),
+        if (subtitleCol != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          subtitleCol,
+        ],
+      ],
     );
   }
 }
@@ -169,26 +229,6 @@ class _AcademyCard extends StatelessWidget {
 
   final Academy academy;
 
-  List<Widget> _badges(ColorScheme scheme) => [
-    StatusBadge(status: academy.isPublic ? 'Public' : 'Private'),
-    if (academy.branches.isNotEmpty)
-      AppBadge(
-        label:
-            '${academy.branches.length} Branch${academy.branches.length > 1 ? 'es' : ''}',
-        icon: Icons.business_outlined,
-        backgroundColor: scheme.primaryContainer,
-        foregroundColor: scheme.onPrimaryContainer,
-      ),
-    if (academy.sports.isNotEmpty)
-      AppBadge(
-        label:
-            '${academy.sports.length} Sport${academy.sports.length > 1 ? 's' : ''}',
-        icon: Icons.sports_outlined,
-        backgroundColor: scheme.secondaryContainer,
-        foregroundColor: scheme.onSecondaryContainer,
-      ),
-  ];
-
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await AppDialog.confirm(
       context,
@@ -219,13 +259,13 @@ class _AcademyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final brand = BrandColors.of(context);
-    final status = StatusColors.of(context);
-
-    return AppCard(
-      variant: AppCardVariant.interactive,
+    return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AuthPalette.surface(context),
+        borderRadius: AppRadii.brMedium,
+        border: Border.all(color: AuthPalette.border(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -233,26 +273,19 @@ class _AcademyCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  gradient: brand.primaryGradient,
+                  color: AuthPalette.red.withValues(alpha: 0.08),
                   borderRadius: AppRadii.brMedium,
                   border: Border.all(
-                    color: scheme.primary.withValues(alpha: 0.35),
+                    color: AuthPalette.red.withValues(alpha: 0.35),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: brand.indigoA.withValues(alpha: 0.28),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
                 ),
                 child: const Icon(
                   Icons.school_outlined,
-                  size: 24,
-                  color: Colors.white,
+                  size: 22,
+                  color: AuthPalette.red,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -264,18 +297,21 @@ class _AcademyCard extends StatelessWidget {
                       academy.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        color: AuthPalette.textPrimary(context),
                       ),
                     ),
                     if (academy.location.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Row(
                         children: [
                           Icon(
                             Icons.location_on_outlined,
                             size: 14,
-                            color: scheme.onSurfaceVariant,
+                            color: AuthPalette.muted(context),
                           ),
                           const SizedBox(width: 2),
                           Flexible(
@@ -283,8 +319,10 @@ class _AcademyCard extends StatelessWidget {
                               academy.location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AuthPalette.subtitle(context),
+                              ),
                             ),
                           ),
                         ],
@@ -301,103 +339,92 @@ class _AcademyCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
             children: [
-              for (final badge in _badges(scheme))
-                Flexible(
-                  child: FittedBox(fit: BoxFit.scaleDown, child: badge),
+              _FlatChip(
+                label: academy.isPublic ? 'Public' : 'Private',
+                dot: academy.isPublic ? AuthPalette.red : AuthPalette.muted(context),
+              ),
+              if (academy.branches.isNotEmpty)
+                _FlatChip(
+                  label:
+                      '${academy.branches.length} Branch${academy.branches.length > 1 ? 'es' : ''}',
+                  icon: Icons.business_outlined,
+                ),
+              if (academy.sports.isNotEmpty)
+                _FlatChip(
+                  label:
+                      '${academy.sports.length} Sport${academy.sports.length > 1 ? 's' : ''}',
+                  icon: Icons.sports_outlined,
                 ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
           Divider(
             height: 1,
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
+            thickness: 1,
+            color: AuthPalette.divider(context),
           ),
           const SizedBox(height: AppSpacing.md),
           _StatsPanel(
             metrics: [
-              _MetricData(
-                Icons.groups_outlined,
-                '${academy.coachCount}',
-                'Coaches',
-                status.success,
-              ),
+              _MetricData(Icons.groups_outlined, '${academy.coachCount}', 'Coaches'),
               _MetricData(
                 Icons.directions_run_outlined,
                 '${academy.athleteCount}',
                 'Athletes',
-                brand.teal,
               ),
               _MetricData(
                 Icons.emoji_events_outlined,
                 '$_placeholderAchievements',
                 'Achievements',
-                status.warning,
               ),
               _MetricData(
                 Icons.calendar_month_outlined,
                 '$_placeholderEstYear',
                 'Est. Year',
-                status.info,
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final coachTile = _ActionTile(
-                icon: Icons.sports,
-                iconColor: scheme.secondary,
-                iconBackground: scheme.secondaryContainer,
-                title: 'Manage Coach',
-                subtitle: 'Manage your coaching staff',
-                onTap: () async {
-                  await context.push(
-                    '/academies/${academy.id}/coaches',
-                    extra: academy,
-                  );
-                  if (context.mounted) {
-                    context.read<AcademyProvider>().loadAcademies();
-                  }
-                },
-              );
-              final athleteTile = _ActionTile(
-                icon: Icons.directions_run_outlined,
-                iconColor: scheme.tertiary,
-                iconBackground: scheme.tertiaryContainer,
-                title: 'Manage Athlete',
-                subtitle: 'Manage your athletes & teams',
-                onTap: () async {
-                  await context.push(
-                    '/academies/${academy.id}/athletes',
-                    extra: academy,
-                  );
-                  if (context.mounted) {
-                    context.read<AcademyProvider>().loadAcademies();
-                  }
-                },
-              );
-
-              if (constraints.maxWidth >= 280) {
-                return Row(
-                  children: [
-                    Expanded(child: coachTile),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(child: athleteTile),
-                  ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  coachTile,
-                  const SizedBox(height: AppSpacing.sm),
-                  athleteTile,
-                ],
-              );
-            },
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _ActionTile(
+                  icon: Icons.sports,
+                  title: 'Manage Coach',
+                  subtitle: 'Coaching staff',
+                  onTap: () async {
+                    await context.push(
+                      '/academies/${academy.id}/coaches',
+                      extra: academy,
+                    );
+                    if (context.mounted) {
+                      context.read<AcademyProvider>().loadAcademies();
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _ActionTile(
+                  icon: Icons.directions_run_outlined,
+                  title: 'Manage Athlete',
+                  subtitle: 'Athletes & teams',
+                  onTap: () async {
+                    await context.push(
+                      '/academies/${academy.id}/athletes',
+                      extra: academy,
+                    );
+                    if (context.mounted) {
+                      context.read<AcademyProvider>().loadAcademies();
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -406,12 +433,11 @@ class _AcademyCard extends StatelessWidget {
 }
 
 class _MetricData {
-  const _MetricData(this.icon, this.count, this.label, this.color);
+  const _MetricData(this.icon, this.count, this.label);
 
   final IconData icon;
   final String count;
   final String label;
-  final Color color;
 }
 
 class _StatsPanel extends StatelessWidget {
@@ -421,14 +447,12 @@ class _StatsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: AuthPalette.bg(context),
         borderRadius: AppRadii.brMedium,
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+        border: Border.all(color: AuthPalette.border(context)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,18 +472,19 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(metric.icon, size: 24, color: metric.color),
-        const SizedBox(height: AppSpacing.xxs),
+        Icon(metric.icon, size: 22, color: AuthPalette.muted(context)),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           metric.count,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            height: 1.1,
+            color: AuthPalette.textPrimary(context),
+          ),
         ),
         const SizedBox(height: AppSpacing.xxs),
         FittedBox(
@@ -467,9 +492,7 @@ class _Metric extends StatelessWidget {
           child: Text(
             metric.label,
             maxLines: 1,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 11, color: AuthPalette.subtitle(context)),
           ),
         ),
       ],
@@ -477,19 +500,60 @@ class _Metric extends StatelessWidget {
   }
 }
 
+class _FlatChip extends StatelessWidget {
+  const _FlatChip({required this.label, this.icon, this.dot});
+
+  final String label;
+  final IconData? icon;
+  final Color? dot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.brPill,
+        border: Border.all(color: AuthPalette.border(context)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dot != null) ...[
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 6),
+          ],
+          if (icon != null) ...[
+            Icon(icon, size: 13, color: AuthPalette.red),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AuthPalette.textPrimary(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Clickable action tile with visible hover feedback so it reads as tappable.
 class _ActionTile extends StatefulWidget {
   const _ActionTile({
     required this.icon,
-    required this.iconColor,
-    required this.iconBackground,
     required this.title,
     required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
-  final Color iconColor;
-  final Color iconBackground;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -503,40 +567,46 @@ class _ActionTileState extends State<_ActionTile> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: AppRadii.brMedium,
-            border: Border.all(
-              color: _hovered
-                  ? scheme.primary.withValues(alpha: 0.4)
-                  : scheme.outlineVariant,
-            ),
-            boxShadow: _hovered ? AppShadows.subtle : AppShadows.none,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: _hovered
+              ? AuthPalette.red.withValues(alpha: 0.05)
+              : AuthPalette.bg(context),
+          borderRadius: AppRadii.brMedium,
+          border: Border.all(
+            color: _hovered
+                ? AuthPalette.red.withValues(alpha: 0.5)
+                : AuthPalette.border(context),
           ),
+        ),
+        child: Material(
+          color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
             borderRadius: AppRadii.brMedium,
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(2),
               child: Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: widget.iconBackground.withValues(alpha: 0.9),
+                      color: AuthPalette.red.withValues(alpha: 0.08),
                       borderRadius: AppRadii.brSmall,
                     ),
-                    child: Icon(widget.icon, size: 20, color: widget.iconColor),
+                    child: Icon(
+                      widget.icon,
+                      size: 19,
+                      color: AuthPalette.red,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(
@@ -549,16 +619,21 @@ class _ActionTileState extends State<_ActionTile> {
                           child: Text(
                             widget.title,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AuthPalette.textPrimary(context),
+                            ),
                           ),
                         ),
                         Text(
                           widget.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AuthPalette.subtitle(context),
+                          ),
                         ),
                       ],
                     ),
@@ -567,7 +642,9 @@ class _ActionTileState extends State<_ActionTile> {
                   Icon(
                     Icons.chevron_right_rounded,
                     size: 18,
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    color: _hovered
+                        ? AuthPalette.red
+                        : AuthPalette.muted(context),
                   ),
                 ],
               ),
@@ -587,13 +664,10 @@ class _CardActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: AppRadii.brMedium,
-        border: Border.all(color: scheme.outlineVariant),
+        border: Border.all(color: AuthPalette.border(context)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -605,14 +679,18 @@ class _CardActions extends StatelessWidget {
             icon: Icon(
               Icons.edit_outlined,
               size: 18,
-              color: scheme.onSurfaceVariant,
+              color: AuthPalette.muted(context),
             ),
           ),
           IconButton(
             tooltip: 'Delete Academy',
             onPressed: onDelete,
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.delete_outline, size: 18, color: scheme.error),
+            icon: Icon(
+              Icons.delete_outline,
+              size: 18,
+              color: AuthPalette.red,
+            ),
           ),
         ],
       ),

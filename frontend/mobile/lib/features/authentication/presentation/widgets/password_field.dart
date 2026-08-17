@@ -24,7 +24,6 @@ class PasswordField extends StatelessWidget {
     return AppTextField(
       controller: controller,
       label: label,
-      icon: Icons.lock_outline,
       obscureText: true,
       obscureTextToggle: true,
       validator: validator,
