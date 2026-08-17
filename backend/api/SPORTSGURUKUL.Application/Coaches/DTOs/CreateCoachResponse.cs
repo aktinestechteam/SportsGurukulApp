@@ -16,4 +16,5 @@ public sealed class CreateCoachResponse
     public string? BranchName { get; set; }
     public CoachStatus Status { get; set; }
     public List<CoachSportResponse> Sports { get; set; } = [];
+    public List<MappedAthleteResponse> MappedAthletes { get; set; } = [];
 }

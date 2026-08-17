@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IAcademyRepository, AcademyRepository>();
         services.AddScoped<ICoachRepository, CoachRepository>();
         services.AddScoped<IAthleteRepository, AthleteRepository>();
+        services.AddScoped<ICoachAthleteRepository, CoachAthleteRepository>();
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ISecureTokenService, SecureTokenService>();

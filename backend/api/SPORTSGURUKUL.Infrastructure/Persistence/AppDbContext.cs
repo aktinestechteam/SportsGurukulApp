@@ -31,6 +31,7 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Coach> Coaches => Set<Coach>();
     public DbSet<AcademyCoach> AcademyCoaches => Set<AcademyCoach>();
     public DbSet<CoachSport> CoachSports => Set<CoachSport>();
+    public DbSet<CoachAthlete> CoachAthletes => Set<CoachAthlete>();
 
     public DbSet<Athlete> Athletes => Set<Athlete>();
     public DbSet<AcademyAthlete> AcademyAthletes => Set<AcademyAthlete>();

@@ -49,6 +49,25 @@ class AthleteSport {
   Map<String, dynamic> toJson() => {'sportId': sportId, 'name': name};
 }
 
+class MappedCoach {
+  const MappedCoach({required this.coachId, this.name = ''});
+
+  final String coachId;
+  final String name;
+
+  factory MappedCoach.fromJson(Map<String, dynamic> json) {
+    return MappedCoach(
+      coachId: json['coachId'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'coachId': coachId,
+    'name': name,
+  };
+}
+
 class Athlete {
   const Athlete({
     required this.athleteId,
@@ -70,6 +89,7 @@ class Athlete {
     this.status = AthleteStatus.invited,
     this.primarySport,
     this.secondarySport,
+    this.mappedCoaches = const [],
     this.createdAt = '',
   });
 
@@ -92,6 +112,7 @@ class Athlete {
   final AthleteStatus status;
   final AthleteSport? primarySport;
   final AthleteSport? secondarySport;
+  final List<MappedCoach> mappedCoaches;
   final String createdAt;
 
   String get fullName => '$firstName $lastName';
@@ -125,6 +146,9 @@ class Athlete {
               (json['secondarySport'] as Map).cast<String, dynamic>(),
             )
           : null,
+      mappedCoaches: (json['mappedCoaches'] as List? ?? const [])
+          .map((e) => MappedCoach.fromJson((e as Map).cast<String, dynamic>()))
+          .toList(),
       createdAt: json['createdAt'] as String? ?? '',
     );
   }
@@ -149,6 +173,7 @@ class Athlete {
     'status': status.value,
     'primarySport': primarySport?.toJson(),
     'secondarySport': secondarySport?.toJson(),
+    'mappedCoaches': mappedCoaches.map((e) => e.toJson()).toList(),
     'createdAt': createdAt,
   };
 }

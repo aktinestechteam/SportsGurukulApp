@@ -17,6 +17,7 @@ public sealed class CoachResponse
     public string? BranchName { get; set; }
     public CoachStatus Status { get; set; }
     public List<CoachSportResponse> Sports { get; set; } = [];
+    public List<MappedAthleteResponse> MappedAthletes { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }
 
@@ -25,4 +26,10 @@ public sealed class CoachSportResponse
     public Guid SportId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Specialization { get; set; }
+}
+
+public sealed class MappedAthleteResponse
+{
+    public Guid AthleteId { get; set; }
+    public string Name { get; set; } = string.Empty;
 }

@@ -6,6 +6,7 @@ using SPORTSGURUKUL.Application.Athletes.Common;
 using SPORTSGURUKUL.Application.Athletes.DTOs;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
@@ -40,6 +41,7 @@ public sealed class UpdateAcademyAthleteCommandHandler
     private readonly IAcademyRepository _academyRepository;
     private readonly IUserRepository _userRepository;
     private readonly IAthleteRepository _athleteRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<UpdateAcademyAthleteCommandHandler> _logger;
@@ -48,6 +50,7 @@ public sealed class UpdateAcademyAthleteCommandHandler
         IAcademyRepository academyRepository,
         IUserRepository userRepository,
         IAthleteRepository athleteRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         ILogger<UpdateAcademyAthleteCommandHandler> logger)
@@ -55,6 +58,7 @@ public sealed class UpdateAcademyAthleteCommandHandler
         _academyRepository = academyRepository;
         _userRepository = userRepository;
         _athleteRepository = athleteRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -99,6 +103,7 @@ public sealed class UpdateAcademyAthleteCommandHandler
         var branch = ResolveBranch(academy, request);
         var primarySport = ResolvePrimarySport(academy, request);
         var secondarySport = ResolveSecondarySport(academy, request, primarySport.Id);
+        var coachIds = await ResolveCoachIdsAsync(command.AcademyId, request, cancellationToken);
 
         // Date-only payloads (e.g. "2011-01-01") deserialize to a DateTime
         // with Kind=Unspecified, which Npgsql rejects for timestamptz
@@ -131,6 +136,13 @@ public sealed class UpdateAcademyAthleteCommandHandler
             BuildSports(athlete.Id, primarySport, secondarySport, now),
             cancellationToken);
 
+        await _coachAthleteRepository.ReplaceAthleteMappingsAsync(
+            command.AthleteId,
+            command.AcademyId,
+            coachIds,
+            ownerUserId,
+            cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var saved = await _athleteRepository.GetByAcademyAndAthleteAsNoTrackingAsync(
@@ -139,6 +151,11 @@ public sealed class UpdateAcademyAthleteCommandHandler
             cancellationToken)
             ?? throw AppException.NotFound("Athlete not found.");
 
+        var mappedCoaches = await _coachAthleteRepository.GetByAthleteAndAcademyAsync(
+            command.AthleteId,
+            command.AcademyId,
+            cancellationToken);
+
         _logger.LogInformation(
             "Athlete {AthleteId} updated for academy {AcademyId} by user {UserId}",
             command.AthleteId,
@@ -146,8 +163,39 @@ public sealed class UpdateAcademyAthleteCommandHandler
             ownerUserId);
 
         return ApiResponse<CreateAthleteResponse>.Ok(
-            AthleteResponseMapper.MapCreated(saved),
+            AthleteResponseMapper.MapCreated(saved, mappedCoaches),
             "Athlete updated successfully.");
+    }
+
+    private async Task<List<Guid>> ResolveCoachIdsAsync(
+        Guid academyId,
+        CreateAthleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.CoachIds.Count == 0)
+        {
+            return [];
+        }
+
+        var academyCoachIds = await _academyRepository.GetAcademyCoachIdsAsync(
+            academyId,
+            cancellationToken);
+        var allowed = academyCoachIds.ToHashSet();
+
+        var result = new List<Guid>(request.CoachIds.Count);
+        foreach (var coachId in request.CoachIds.Distinct())
+        {
+            if (!allowed.Contains(coachId))
+            {
+                throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
+                    "coachIds",
+                    "The selected coach does not belong to this academy.");
+            }
+
+            result.Add(coachId);
+        }
+
+        return result;
     }
 
     private static List<AthleteSport> BuildSports(

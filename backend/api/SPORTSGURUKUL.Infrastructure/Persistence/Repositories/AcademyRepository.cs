@@ -61,6 +61,22 @@ public class AcademyRepository : IAcademyRepository
             a => a.Id == academyId && a.OwnerUserId == ownerUserId,
             cancellationToken);
 
+    public Task<List<Guid>> GetAcademyAthleteIdsAsync(
+        Guid academyId,
+        CancellationToken cancellationToken = default)
+        => _context.AcademyAthletes
+            .Where(a => a.AcademyId == academyId)
+            .Select(a => a.AthleteId)
+            .ToListAsync(cancellationToken);
+
+    public Task<List<Guid>> GetAcademyCoachIdsAsync(
+        Guid academyId,
+        CancellationToken cancellationToken = default)
+        => _context.AcademyCoaches
+            .Where(c => c.AcademyId == academyId)
+            .Select(c => c.CoachId)
+            .ToListAsync(cancellationToken);
+
     public async Task AddAsync(Academy academy, CancellationToken cancellationToken = default)
         => await _context.Academies.AddAsync(academy, cancellationToken);
 
@@ -100,6 +116,10 @@ public class AcademyRepository : IAcademyRepository
 
     public async Task RemoveAssociationsAsync(Guid academyId, CancellationToken cancellationToken = default)
     {
+        await _context.CoachAthletes
+            .Where(ca => ca.AcademyId == academyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
         await _context.AcademyAthletes
             .Where(a => a.AcademyId == academyId)
             .ExecuteDeleteAsync(cancellationToken);

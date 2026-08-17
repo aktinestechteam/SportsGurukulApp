@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using SPORTSGURUKUL.Application.Academies.Interfaces;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
@@ -33,6 +34,7 @@ public sealed class DeleteAcademyAthleteCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAthleteRepository _athleteRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAcademyAthleteCommandHandler> _logger;
@@ -42,6 +44,7 @@ public sealed class DeleteAcademyAthleteCommandHandler
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IAthleteRepository athleteRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAcademyAthleteCommandHandler> logger)
@@ -50,6 +53,7 @@ public sealed class DeleteAcademyAthleteCommandHandler
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _athleteRepository = athleteRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -83,6 +87,11 @@ public sealed class DeleteAcademyAthleteCommandHandler
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
         try
         {
+            await _coachAthleteRepository.RemoveByAthleteAsync(
+                athleteId,
+                command.AcademyId,
+                cancellationToken);
+
             await _athleteRepository.RemoveAssociationAsync(command.AcademyId, athleteId, cancellationToken);
 
             if (!await _athleteRepository.HasOtherAssociationsAsync(athleteId, command.AcademyId, cancellationToken))

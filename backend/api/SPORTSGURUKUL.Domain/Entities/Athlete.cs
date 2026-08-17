@@ -19,6 +19,7 @@ public class Athlete
     public User User { get; set; } = null!;
     public ICollection<AcademyAthlete> AcademyAssociations { get; set; } = [];
     public ICollection<AthleteSport> Sports { get; set; } = [];
+    public ICollection<CoachAthlete> CoachMappings { get; set; } = [];
 
     public void Touch() => UpdatedAt = DateTime.UtcNow;
 }

@@ -33,6 +33,7 @@ public sealed class DeleteAcademyCoachCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ICoachRepository _coachRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAcademyCoachCommandHandler> _logger;
@@ -42,6 +43,7 @@ public sealed class DeleteAcademyCoachCommandHandler
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         ICoachRepository coachRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAcademyCoachCommandHandler> logger)
@@ -50,6 +52,7 @@ public sealed class DeleteAcademyCoachCommandHandler
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _coachRepository = coachRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -83,6 +86,11 @@ public sealed class DeleteAcademyCoachCommandHandler
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
         try
         {
+            await _coachAthleteRepository.RemoveByCoachAsync(
+                coachId,
+                command.AcademyId,
+                cancellationToken);
+
             await _coachRepository.RemoveAssociationAsync(command.AcademyId, coachId, cancellationToken);
 
             if (!await _coachRepository.HasOtherAssociationsAsync(coachId, command.AcademyId, cancellationToken))

@@ -23,11 +23,18 @@ public sealed class AthleteResponse
     public AthleteStatus Status { get; set; }
     public AthleteSportResponse PrimarySport { get; set; } = null!;
     public AthleteSportResponse? SecondarySport { get; set; }
+    public List<MappedCoachResponse> MappedCoaches { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }
 
 public sealed class AthleteSportResponse
 {
     public Guid SportId { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public sealed class MappedCoachResponse
+{
+    public Guid CoachId { get; set; }
     public string Name { get; set; } = string.Empty;
 }

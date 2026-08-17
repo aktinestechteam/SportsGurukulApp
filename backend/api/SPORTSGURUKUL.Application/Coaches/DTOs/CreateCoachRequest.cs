@@ -17,6 +17,12 @@ public sealed class CreateCoachRequest
     /// One or more sports configured for the academy that the coach teaches.
     /// </summary>
     public List<CoachSportAssignmentRequest> Sports { get; set; } = [];
+
+    /// <summary>
+    /// Athletes belonging to the academy that should be mapped to this coach.
+    /// An athlete can be mapped to multiple coaches. Duplicates are ignored.
+    /// </summary>
+    public List<Guid> AthleteIds { get; set; } = [];
 }
 
 public sealed class CoachSportAssignmentRequest

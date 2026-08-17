@@ -10,6 +10,7 @@ public class Coach
     public User User { get; set; } = null!;
     public ICollection<AcademyCoach> AcademyAssociations { get; set; } = [];
     public ICollection<CoachSport> Sports { get; set; } = [];
+    public ICollection<CoachAthlete> AthleteMappings { get; set; } = [];
 
     public void Touch() => UpdatedAt = DateTime.UtcNow;
 }

@@ -43,6 +43,7 @@ public sealed class CreateAcademyAthleteCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IAthleteRepository _athleteRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly IPublicUserIdGenerator _publicUserIdGenerator;
     private readonly ITemporaryPasswordGenerator _temporaryPasswordGenerator;
     private readonly IPasswordHasher _passwordHasher;
@@ -57,6 +58,7 @@ public sealed class CreateAcademyAthleteCommandHandler
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IAthleteRepository athleteRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         IPublicUserIdGenerator publicUserIdGenerator,
         ITemporaryPasswordGenerator temporaryPasswordGenerator,
         IPasswordHasher passwordHasher,
@@ -70,6 +72,7 @@ public sealed class CreateAcademyAthleteCommandHandler
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _athleteRepository = athleteRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _publicUserIdGenerator = publicUserIdGenerator;
         _temporaryPasswordGenerator = temporaryPasswordGenerator;
         _passwordHasher = passwordHasher;
@@ -130,6 +133,7 @@ public sealed class CreateAcademyAthleteCommandHandler
             var branchId = ResolveBranch(academy, request);
             var primarySport = ResolvePrimarySport(academy, request);
             var secondarySport = ResolveSecondarySport(academy, request, primarySport.Id);
+            var coachIds = await ResolveCoachIdsAsync(command.AcademyId, request, cancellationToken);
 
             var publicUserId = await GenerateUniquePublicUserIdAsync(cancellationToken);
 
@@ -223,6 +227,18 @@ public sealed class CreateAcademyAthleteCommandHandler
                 Branch = branchId
             };
 
+            foreach (var coachId in coachIds)
+            {
+                athlete.CoachMappings.Add(new CoachAthlete
+                {
+                    CoachId = coachId,
+                    AthleteId = athleteId,
+                    AcademyId = command.AcademyId,
+                    AssignedBy = ownerUserId,
+                    AssignedAt = now
+                });
+            }
+
             await _userRepository.AddAsync(user, cancellationToken);
             await _athleteRepository.AddAsync(athlete, cancellationToken);
             await _athleteRepository.AddAssociationAsync(association, cancellationToken);
@@ -253,6 +269,11 @@ public sealed class CreateAcademyAthleteCommandHandler
 
             await _unitOfWork.CommitAsync(cancellationToken);
 
+            var mappedCoaches = await _coachAthleteRepository.GetByAthleteAndAcademyAsync(
+                athleteId,
+                command.AcademyId,
+                cancellationToken);
+
             _logger.LogInformation(
                 "Athlete {AthleteId} ({PublicUserId}) added to academy {AcademyId} by {AssignedBy}",
                 athleteId,
@@ -261,7 +282,7 @@ public sealed class CreateAcademyAthleteCommandHandler
                 ownerUserId);
 
             return ApiResponse<CreateAthleteResponse>.Ok(
-                AthleteResponseMapper.MapCreated(association),
+                AthleteResponseMapper.MapCreated(association, mappedCoaches),
                 "Athlete added successfully. Login credentials have been sent to the registered email address.");
         }
         catch
@@ -348,5 +369,36 @@ public sealed class CreateAcademyAthleteCommandHandler
         }
 
         return sport;
+    }
+
+    private async Task<List<Guid>> ResolveCoachIdsAsync(
+        Guid academyId,
+        CreateAthleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.CoachIds.Count == 0)
+        {
+            return [];
+        }
+
+        var academyCoachIds = await _academyRepository.GetAcademyCoachIdsAsync(
+            academyId,
+            cancellationToken);
+        var allowed = academyCoachIds.ToHashSet();
+
+        var result = new List<Guid>(request.CoachIds.Count);
+        foreach (var coachId in request.CoachIds.Distinct())
+        {
+            if (!allowed.Contains(coachId))
+            {
+                throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
+                    "coachIds",
+                    "The selected coach does not belong to this academy.");
+            }
+
+            result.Add(coachId);
+        }
+
+        return result;
     }
 }

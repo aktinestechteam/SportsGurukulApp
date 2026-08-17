@@ -12,9 +12,11 @@ import 'package:sports_gurukul/features/athlete/domain/entities/athlete.dart';
 import 'package:sports_gurukul/features/athlete/presentation/pages/add_athlete_page.dart';
 import 'package:sports_gurukul/features/athlete/presentation/pages/athletes_list_page.dart';
 import 'package:sports_gurukul/features/athlete/presentation/providers/athlete_provider.dart';
+import 'package:sports_gurukul/features/coach/presentation/providers/coach_provider.dart';
 
 import 'helpers/fake_academy_repository.dart';
 import 'helpers/fake_athlete_repository.dart';
+import 'helpers/fake_coach_repository.dart';
 
 Academy _sampleAcademy() => const Academy(
   id: 'a1',
@@ -85,6 +87,9 @@ Widget _app(AthleteProvider athlete, {AcademyProvider? academy}) {
       ChangeNotifierProvider<AthleteProvider>.value(value: athlete),
       ChangeNotifierProvider<AcademyProvider>.value(
         value: academy ?? buildAcademyProvider(),
+      ),
+      ChangeNotifierProvider<CoachProvider>.value(
+        value: buildCoachProvider(),
       ),
       ChangeNotifierProvider(create: (_) => ThemeController()),
     ],

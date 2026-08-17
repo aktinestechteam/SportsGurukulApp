@@ -3,9 +3,11 @@ using SPORTSGURUKUL.Application.Academies.Interfaces;
 using SPORTSGURUKUL.Application.Athletes.Common;
 using SPORTSGURUKUL.Application.Athletes.DTOs;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
+using SPORTSGURUKUL.Domain.Entities;
 
 namespace SPORTSGURUKUL.Application.Athletes.Queries;
 
@@ -16,15 +18,18 @@ public sealed class GetAcademyAthletesQueryHandler
 {
     private readonly IAcademyRepository _academyRepository;
     private readonly IAthleteRepository _athleteRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly ICurrentUserService _currentUserService;
 
     public GetAcademyAthletesQueryHandler(
         IAcademyRepository academyRepository,
         IAthleteRepository athleteRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         ICurrentUserService currentUserService)
     {
         _academyRepository = academyRepository;
         _athleteRepository = athleteRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _currentUserService = currentUserService;
     }
 
@@ -45,9 +50,17 @@ public sealed class GetAcademyAthletesQueryHandler
             ?? throw AppException.NotFound("Academy not found.");
 
         var associations = await _athleteRepository.GetByAcademyAsync(query.AcademyId, cancellationToken);
+        var mappings = await _coachAthleteRepository.GetByAcademyAsync(query.AcademyId, cancellationToken);
+        var mappingsByAthlete = mappings
+            .GroupBy(ca => ca.AthleteId)
+            .ToDictionary(g => g.Key, g => (IEnumerable<CoachAthlete>)g);
 
         return ApiResponse<List<AthleteResponse>>.Ok(
-            associations.Select(AthleteResponseMapper.Map).ToList(),
+            associations
+                .Select(a => AthleteResponseMapper.Map(
+                    a,
+                    mappingsByAthlete.TryGetValue(a.AthleteId, out var athleteMappings) ? athleteMappings : null))
+                .ToList(),
             "Athletes retrieved successfully.");
     }
 }

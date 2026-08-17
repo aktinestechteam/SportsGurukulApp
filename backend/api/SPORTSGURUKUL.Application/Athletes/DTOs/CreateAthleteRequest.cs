@@ -24,4 +24,10 @@ public sealed class CreateAthleteRequest
 
     /// <summary>Optional secondary sport configured for the academy.</summary>
     public Guid? SecondarySportId { get; set; }
+
+    /// <summary>
+    /// Coaches belonging to the academy that should be mapped to this athlete.
+    /// A coach can be mapped to multiple athletes. Duplicates are ignored.
+    /// </summary>
+    public List<Guid> CoachIds { get; set; } = [];
 }

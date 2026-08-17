@@ -13,6 +13,8 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../academy/domain/entities/academy.dart';
 import '../../../academy/presentation/providers/academy_provider.dart';
+import '../../../athlete/domain/entities/athlete.dart';
+import '../../../athlete/presentation/providers/athlete_provider.dart';
 import '../../../authentication/presentation/widgets/validators.dart';
 import '../../domain/entities/coach.dart';
 import '../../domain/repositories/coach_repository.dart';
@@ -49,7 +51,36 @@ class _AddCoachPageState extends State<AddCoachPage> {
   final Set<String> _selectedSportIds = {};
   final Map<String, TextEditingController> _specializationControllers = {};
 
+  List<Athlete> _academyAthletes = [];
+  final Set<String> _selectedAthleteIds = {};
+  bool _loadingAthletes = false;
+  _AthleteFilter _athleteFilter = _AthleteFilter.all;
+
   bool _loadingFallback = false;
+
+  List<Athlete> get _visibleAthletes {
+    final athletes = _academyAthletes;
+    switch (_athleteFilter) {
+      case _AthleteFilter.all:
+        return athletes;
+      case _AthleteFilter.allocated:
+        return athletes
+            .where(
+              (a) =>
+                  _selectedAthleteIds.contains(a.athleteId) ||
+                  a.mappedCoaches.isNotEmpty,
+            )
+            .toList();
+      case _AthleteFilter.notAllocated:
+        return athletes
+            .where(
+              (a) =>
+                  _selectedAthleteIds.contains(a.athleteId) ||
+                  a.mappedCoaches.isEmpty,
+            )
+            .toList();
+    }
+  }
 
   @override
   void initState() {
@@ -79,7 +110,28 @@ class _AddCoachPageState extends State<AddCoachPage> {
           text: sport.specialization,
         );
       }
+      for (final athlete in editingCoach.mappedAthletes) {
+        _selectedAthleteIds.add(athlete.athleteId);
+      }
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadAcademyAthletes();
+      }
+    });
+  }
+
+  Future<void> _loadAcademyAthletes() async {
+    setState(() => _loadingAthletes = true);
+    await context
+        .read<AthleteProvider>()
+        .loadAthletes(widget.academyId);
+    if (!mounted) return;
+    setState(() {
+      _loadingAthletes = false;
+      _academyAthletes = context.read<AthleteProvider>().athletes;
+    });
   }
 
   @override
@@ -165,6 +217,7 @@ class _AddCoachPageState extends State<AddCoachPage> {
       mobileNumber: _mobile.text.trim(),
       branchId: academy.branches.isEmpty ? null : _selectedBranchId,
       sports: sports,
+      athleteIds: _selectedAthleteIds.toList(),
     );
 
     final provider = context.read<CoachProvider>();
@@ -180,6 +233,7 @@ class _AddCoachPageState extends State<AddCoachPage> {
     if (!mounted) return;
 
     if (success) {
+      context.read<AthleteProvider>().loadAthletes(widget.academyId);
       AppSnackbar.show(
         context,
         editingCoach == null
@@ -338,6 +392,105 @@ class _AddCoachPageState extends State<AddCoachPage> {
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AppSectionHeader(
+                                  title: 'Athletes',
+                                  subtitle:
+                                      'Select the academy athletes assigned to this coach.',
+                                  spacing: AppSpacing.md,
+                                ),
+                                if (_loadingAthletes)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    child: AppLoading(
+                                      label: 'Loading athletes...',
+                                      centered: false,
+                                    ),
+                                  )
+                                else if (_academyAthletes.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      'No athletes in this academy yet. You can assign athletes later.',
+                                    ),
+                                  )
+                                else ...[
+                                  const SizedBox(height: AppSpacing.xs),
+                                  SegmentedButton<_AthleteFilter>(
+                                    segments: const [
+                                      ButtonSegment(
+                                        value: _AthleteFilter.all,
+                                        label: Text('All'),
+                                        icon: Icon(
+                                          Icons.group_outlined,
+                                          size: 18,
+                                        ),
+                                      ),
+                                      ButtonSegment(
+                                        value: _AthleteFilter.allocated,
+                                        label: Text('Allocated'),
+                                        icon: Icon(
+                                          Icons.check_circle_outline,
+                                          size: 18,
+                                        ),
+                                      ),
+                                      ButtonSegment(
+                                        value: _AthleteFilter.notAllocated,
+                                        label: Text('Not allocated'),
+                                        icon: Icon(
+                                          Icons.person_add_alt_1,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ],
+                                    selected: {_athleteFilter},
+                                    onSelectionChanged: (selection) =>
+                                        setState(() {
+                                          _athleteFilter = selection.first;
+                                        }),
+                                    showSelectedIcon: false,
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  if (_visibleAthletes.isEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: AppSpacing.sm,
+                                      ),
+                                      child: Text(
+                                        'No athletes match this filter.',
+                                      ),
+                                    )
+                                  else
+                                    for (final athlete in _visibleAthletes)
+                                      _AthleteTile(
+                                        athlete: athlete,
+                                        selected: _selectedAthleteIds.contains(
+                                          athlete.athleteId,
+                                        ),
+                                        onChanged: (selected) => setState(() {
+                                          if (selected) {
+                                            _selectedAthleteIds.add(
+                                              athlete.athleteId,
+                                            );
+                                          } else {
+                                            _selectedAthleteIds.remove(
+                                              athlete.athleteId,
+                                            );
+                                          }
+                                        }),
+                                      ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
                           AppButton(
                             label: widget.isEditing
                                 ? 'Save Changes'
@@ -434,6 +587,44 @@ class _SportTile extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+enum _AthleteFilter { all, allocated, notAllocated }
+
+class _AthleteTile extends StatelessWidget {
+  const _AthleteTile({
+    required this.athlete,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final Athlete athlete;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: CheckboxListTile(
+        value: selected,
+        onChanged: (value) => onChanged(value ?? false),
+        title: Text(athlete.fullName),
+        subtitle: Text(
+          [
+            if (athlete.ageGroup != null && athlete.ageGroup!.isNotEmpty)
+              athlete.ageGroup!,
+            athlete.mappedCoaches.isEmpty
+                ? 'Not allocated to any coach'
+                : 'Allocated to ${athlete.mappedCoaches.length} '
+                      '${athlete.mappedCoaches.length == 1 ? 'coach' : 'coaches'}',
+          ].join(' · '),
+        ),
+        controlAffinity: ListTileControlAffinity.leading,
+        contentPadding: EdgeInsets.zero,
+      ),
     );
   }
 }

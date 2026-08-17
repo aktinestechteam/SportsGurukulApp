@@ -14,6 +14,8 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../academy/domain/entities/academy.dart';
 import '../../../academy/presentation/providers/academy_provider.dart';
 import '../../../authentication/presentation/widgets/validators.dart';
+import '../../../coach/domain/entities/coach.dart';
+import '../../../coach/presentation/providers/coach_provider.dart';
 import '../../domain/entities/athlete.dart';
 import '../../domain/repositories/athlete_repository.dart';
 import '../providers/athlete_provider.dart';
@@ -53,6 +55,10 @@ class _AddAthletePageState extends State<AddAthletePage> {
   String? _primarySportId;
   String? _secondarySportId;
 
+  List<Coach> _academyCoaches = [];
+  final Set<String> _selectedCoachIds = {};
+  bool _loadingCoaches = false;
+
   bool _loadingFallback = false;
 
   @override
@@ -75,6 +81,9 @@ class _AddAthletePageState extends State<AddAthletePage> {
       _dateOfBirth = editingAthlete.dateOfBirth;
       _primarySportId = editingAthlete.primarySport?.sportId;
       _secondarySportId = editingAthlete.secondarySport?.sportId;
+      for (final coach in editingAthlete.mappedCoaches) {
+        _selectedCoachIds.add(coach.coachId);
+      }
     }
 
     _academy = widget.academy;
@@ -87,6 +96,22 @@ class _AddAthletePageState extends State<AddAthletePage> {
     } else {
       _applyAcademyDefaults(_academy!);
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadAcademyCoaches();
+      }
+    });
+  }
+
+  Future<void> _loadAcademyCoaches() async {
+    setState(() => _loadingCoaches = true);
+    await context.read<CoachProvider>().loadCoaches(widget.academyId);
+    if (!mounted) return;
+    setState(() {
+      _loadingCoaches = false;
+      _academyCoaches = context.read<CoachProvider>().coaches;
+    });
   }
 
   void _applyAcademyDefaults(Academy academy) {
@@ -195,6 +220,7 @@ class _AddAthletePageState extends State<AddAthletePage> {
       secondarySportId: _secondarySportId,
       address: _optional(_address.text),
       emergencyContact: _optional(_emergencyContact.text),
+      coachIds: _selectedCoachIds.toList(),
     );
 
     final provider = context.read<AthleteProvider>();
@@ -210,6 +236,7 @@ class _AddAthletePageState extends State<AddAthletePage> {
     if (!mounted) return;
 
     if (success) {
+      context.read<CoachProvider>().loadCoaches(widget.academyId);
       AppSnackbar.show(
         context,
         editingAthlete == null
@@ -425,6 +452,56 @@ class _AddAthletePageState extends State<AddAthletePage> {
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AppSectionHeader(
+                                  title: 'Coaches',
+                                  subtitle:
+                                      'Select the academy coaches who will train this athlete.',
+                                  spacing: AppSpacing.md,
+                                ),
+                                if (_loadingCoaches)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    child: AppLoading(
+                                      label: 'Loading coaches...',
+                                      centered: false,
+                                    ),
+                                  )
+                                else if (_academyCoaches.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      'No coaches in this academy yet. You can assign coaches later.',
+                                    ),
+                                  )
+                                else
+                                  for (final coach in _academyCoaches)
+                                    _CoachTile(
+                                      coach: coach,
+                                      selected: _selectedCoachIds.contains(
+                                        coach.coachId,
+                                      ),
+                                      onChanged: (selected) => setState(() {
+                                        if (selected) {
+                                          _selectedCoachIds.add(coach.coachId);
+                                        } else {
+                                          _selectedCoachIds.remove(
+                                            coach.coachId,
+                                          );
+                                        }
+                                      }),
+                                    ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
                           AppButton(
                             label: widget.isEditing
                                 ? 'Save Changes'
@@ -544,6 +621,33 @@ class _SportSelector extends StatelessWidget {
           DropdownMenuItem(value: sport.id, child: Text(sport.name)),
       ],
       onChanged: onChanged,
+    );
+  }
+}
+
+class _CoachTile extends StatelessWidget {
+  const _CoachTile({
+    required this.coach,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final Coach coach;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: CheckboxListTile(
+        value: selected,
+        onChanged: (value) => onChanged(value ?? false),
+        title: Text(coach.fullName),
+        subtitle: Text(coach.sports.map((s) => s.name).join(', ')),
+        controlAffinity: ListTileControlAffinity.leading,
+        contentPadding: EdgeInsets.zero,
+      ),
     );
   }
 }

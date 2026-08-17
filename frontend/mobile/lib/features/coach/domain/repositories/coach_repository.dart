@@ -26,6 +26,7 @@ class CoachRequestInput {
     required this.mobileNumber,
     this.branchId,
     this.sports = const [],
+    this.athleteIds = const [],
   });
 
   final String firstName;
@@ -34,4 +35,5 @@ class CoachRequestInput {
   final String mobileNumber;
   final String? branchId;
   final List<CoachSportInput> sports;
+  final List<String> athleteIds;
 }

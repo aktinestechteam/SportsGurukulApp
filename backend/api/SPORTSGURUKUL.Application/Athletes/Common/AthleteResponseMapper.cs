@@ -5,7 +5,7 @@ namespace SPORTSGURUKUL.Application.Athletes.Common;
 
 public static class AthleteResponseMapper
 {
-    public static AthleteResponse Map(AcademyAthlete association)
+    public static AthleteResponse Map(AcademyAthlete association, IEnumerable<CoachAthlete>? mappings = null)
     {
         var athlete = association.Athlete;
         var user = athlete.User;
@@ -31,11 +31,12 @@ public static class AthleteResponseMapper
             Status = association.Status,
             PrimarySport = MapPrimarySport(athlete.Sports),
             SecondarySport = MapSecondarySport(athlete.Sports),
+            MappedCoaches = MapMappedCoaches(mappings),
             CreatedAt = association.AssignedAt
         };
     }
 
-    public static CreateAthleteResponse MapCreated(AcademyAthlete association)
+    public static CreateAthleteResponse MapCreated(AcademyAthlete association, IEnumerable<CoachAthlete>? mappings = null)
     {
         var athlete = association.Athlete;
         var user = athlete.User;
@@ -57,9 +58,24 @@ public static class AthleteResponseMapper
             BranchName = association.Branch?.Name,
             Status = association.Status,
             PrimarySport = MapPrimarySport(athlete.Sports),
-            SecondarySport = MapSecondarySport(athlete.Sports)
+            SecondarySport = MapSecondarySport(athlete.Sports),
+            MappedCoaches = MapMappedCoaches(mappings)
         };
     }
+
+    private static List<MappedCoachResponse> MapMappedCoaches(IEnumerable<CoachAthlete>? mappings)
+        => mappings?
+            .OrderBy(ca => ca.Coach.User.FirstName)
+            .ThenBy(ca => ca.Coach.User.LastName)
+            .Select(ca => new MappedCoachResponse
+            {
+                CoachId = ca.CoachId,
+                Name = BuildFullName(ca.Coach.User.FirstName, ca.Coach.User.LastName)
+            })
+            .ToList() ?? [];
+
+    private static string BuildFullName(string firstName, string lastName)
+        => string.IsNullOrWhiteSpace(lastName) ? firstName : $"{firstName} {lastName}".Trim();
 
     private static AthleteSportResponse MapPrimarySport(IEnumerable<AthleteSport> sports)
         => sports

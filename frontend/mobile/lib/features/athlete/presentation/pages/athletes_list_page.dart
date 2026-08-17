@@ -33,14 +33,11 @@ class _AthletesListPageState extends State<AthletesListPage> {
   @override
   void initState() {
     super.initState();
-    final provider = context.read<AthleteProvider>();
-    if (provider.status == AthleteLoadStatus.initial) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          provider.loadAthletes(widget.academyId);
-        }
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AthleteProvider>().loadAthletes(widget.academyId);
+      }
+    });
   }
 
   @override

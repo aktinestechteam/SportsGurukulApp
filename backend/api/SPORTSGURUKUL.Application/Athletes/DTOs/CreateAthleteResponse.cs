@@ -20,4 +20,5 @@ public sealed class CreateAthleteResponse
     public AthleteStatus Status { get; set; }
     public AthleteSportResponse PrimarySport { get; set; } = null!;
     public AthleteSportResponse? SecondarySport { get; set; }
+    public List<MappedCoachResponse> MappedCoaches { get; set; } = [];
 }

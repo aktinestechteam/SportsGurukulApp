@@ -35,5 +35,6 @@ class CoachRepositoryImpl implements CoachRepository {
     mobileNumber: input.mobileNumber,
     branchId: input.branchId,
     sports: input.sports,
+    athleteIds: input.athleteIds,
   );
 }

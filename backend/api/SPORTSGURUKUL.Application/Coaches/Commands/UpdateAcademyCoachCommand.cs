@@ -39,6 +39,7 @@ public sealed class UpdateAcademyCoachCommandHandler
     private readonly IAcademyRepository _academyRepository;
     private readonly IUserRepository _userRepository;
     private readonly ICoachRepository _coachRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<UpdateAcademyCoachCommandHandler> _logger;
@@ -47,6 +48,7 @@ public sealed class UpdateAcademyCoachCommandHandler
         IAcademyRepository academyRepository,
         IUserRepository userRepository,
         ICoachRepository coachRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         ILogger<UpdateAcademyCoachCommandHandler> logger)
@@ -54,6 +56,7 @@ public sealed class UpdateAcademyCoachCommandHandler
         _academyRepository = academyRepository;
         _userRepository = userRepository;
         _coachRepository = coachRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -97,6 +100,7 @@ public sealed class UpdateAcademyCoachCommandHandler
 
         var branch = ResolveBranch(academy, request);
         var sports = ResolveSports(academy, request);
+        var athleteIds = await ResolveAthleteIdsAsync(command.AcademyId, request, cancellationToken);
 
         var user = association.Coach.User;
         user.FirstName = request.FirstName.Trim();
@@ -112,6 +116,12 @@ public sealed class UpdateAcademyCoachCommandHandler
         association.Branch = branch;
 
         await _coachRepository.ReplaceSportsAsync(association.Coach, sports, cancellationToken);
+        await _coachAthleteRepository.ReplaceCoachMappingsAsync(
+            command.CoachId,
+            command.AcademyId,
+            athleteIds,
+            ownerUserId,
+            cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var saved = await _coachRepository.GetByAcademyAndCoachAsNoTrackingAsync(
@@ -120,6 +130,11 @@ public sealed class UpdateAcademyCoachCommandHandler
             cancellationToken)
             ?? throw AppException.NotFound("Coach not found.");
 
+        var mappedAthletes = await _coachAthleteRepository.GetByCoachAndAcademyAsync(
+            command.CoachId,
+            command.AcademyId,
+            cancellationToken);
+
         _logger.LogInformation(
             "Coach {CoachId} updated for academy {AcademyId} by user {UserId}",
             command.CoachId,
@@ -127,8 +142,39 @@ public sealed class UpdateAcademyCoachCommandHandler
             ownerUserId);
 
         return ApiResponse<CoachResponse>.Ok(
-            CoachResponseMapper.Map(saved),
+            CoachResponseMapper.Map(saved, mappedAthletes),
             "Coach updated successfully.");
+    }
+
+    private async Task<List<Guid>> ResolveAthleteIdsAsync(
+        Guid academyId,
+        CreateCoachRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.AthleteIds.Count == 0)
+        {
+            return [];
+        }
+
+        var academyAthleteIds = await _academyRepository.GetAcademyAthleteIdsAsync(
+            academyId,
+            cancellationToken);
+        var allowed = academyAthleteIds.ToHashSet();
+
+        var result = new List<Guid>(request.AthleteIds.Count);
+        foreach (var athleteId in request.AthleteIds.Distinct())
+        {
+            if (!allowed.Contains(athleteId))
+            {
+                throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
+                    "athleteIds",
+                    "The selected athlete does not belong to this academy.");
+            }
+
+            result.Add(athleteId);
+        }
+
+        return result;
     }
 
     private static AcademyBranch? ResolveBranch(Academy academy, CreateCoachRequest request)

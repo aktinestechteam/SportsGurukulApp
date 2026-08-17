@@ -4,6 +4,7 @@ using SPORTSGURUKUL.Application.Academies.Interfaces;
 using SPORTSGURUKUL.Application.Athletes.Commands;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
 using SPORTSGURUKUL.Domain.Entities;
@@ -22,6 +23,7 @@ public class DeleteAcademyAthleteCommandTests
     private readonly Mock<IUserRepository> _userRepository = new();
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepository = new();
     private readonly Mock<IAthleteRepository> _athleteRepository = new();
+    private readonly Mock<ICoachAthleteRepository> _coachAthleteRepository = new();
     private readonly Mock<ICurrentUserService> _currentUserService = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
 
@@ -50,6 +52,9 @@ public class DeleteAcademyAthleteCommandTests
         var response = await handler.Handle(BuildCommand(), CancellationToken.None);
 
         Assert.True(response.Success);
+        _coachAthleteRepository.Verify(
+            x => x.RemoveByAthleteAsync(_athleteId, _academyId, It.IsAny<CancellationToken>()),
+            Times.Once);
         _athleteRepository.Verify(
             x => x.RemoveAssociationAsync(_academyId, _athleteId, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -128,6 +133,7 @@ public class DeleteAcademyAthleteCommandTests
             _userRepository.Object,
             _refreshTokenRepository.Object,
             _athleteRepository.Object,
+            _coachAthleteRepository.Object,
             _currentUserService.Object,
             _unitOfWork.Object,
             NullLogger<DeleteAcademyAthleteCommandHandler>.Instance);

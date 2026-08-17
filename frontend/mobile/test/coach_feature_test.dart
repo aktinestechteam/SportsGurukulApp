@@ -8,12 +8,14 @@ import 'package:sports_gurukul/core/theme/theme_controller.dart';
 import 'package:sports_gurukul/core/widgets/app_button.dart';
 import 'package:sports_gurukul/features/academy/domain/entities/academy.dart';
 import 'package:sports_gurukul/features/academy/presentation/providers/academy_provider.dart';
+import 'package:sports_gurukul/features/athlete/presentation/providers/athlete_provider.dart';
 import 'package:sports_gurukul/features/coach/domain/entities/coach.dart';
 import 'package:sports_gurukul/features/coach/presentation/pages/add_coach_page.dart';
 import 'package:sports_gurukul/features/coach/presentation/pages/coaches_list_page.dart';
 import 'package:sports_gurukul/features/coach/presentation/providers/coach_provider.dart';
 
 import 'helpers/fake_academy_repository.dart';
+import 'helpers/fake_athlete_repository.dart';
 import 'helpers/fake_coach_repository.dart';
 
 Academy _sampleAcademy() => const Academy(
@@ -83,6 +85,9 @@ Widget _app(CoachProvider coach, {AcademyProvider? academy}) {
       ChangeNotifierProvider<CoachProvider>.value(value: coach),
       ChangeNotifierProvider<AcademyProvider>.value(
         value: academy ?? buildAcademyProvider(),
+      ),
+      ChangeNotifierProvider<AthleteProvider>.value(
+        value: buildAthleteProvider(),
       ),
       ChangeNotifierProvider(create: (_) => ThemeController()),
     ],

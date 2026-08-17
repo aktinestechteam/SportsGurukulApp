@@ -27,6 +27,7 @@ public class CreateAcademyAthleteCommandTests
     private readonly Mock<IUserRepository> _userRepository = new();
     private readonly Mock<IRoleRepository> _roleRepository = new();
     private readonly Mock<IAthleteRepository> _athleteRepository = new();
+    private readonly Mock<ICoachAthleteRepository> _coachAthleteRepository = new();
     private readonly Mock<IPublicUserIdGenerator> _publicUserIdGenerator = new();
     private readonly Mock<ITemporaryPasswordGenerator> _temporaryPasswordGenerator = new();
     private readonly Mock<IPasswordHasher> _passwordHasher = new();
@@ -65,6 +66,10 @@ public class CreateAcademyAthleteCommandTests
         _roleRepository
             .Setup(x => x.GetByNameAsync(RoleNames.AcademyAthlete, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Role { Id = Guid.NewGuid(), Name = RoleNames.AcademyAthlete });
+
+        _academyRepository
+            .Setup(x => x.GetAcademyCoachIdsAsync(_academyId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
     }
 
     [Fact]
@@ -303,12 +308,53 @@ public class CreateAcademyAthleteCommandTests
         Assert.True(exception.Errors.ContainsKey("secondarySportId"));
     }
 
+    [Fact]
+    public async Task Create_WithCoachIds_AddsCoachMappings()
+    {
+        var coachId = Guid.NewGuid();
+        _academyRepository
+            .Setup(x => x.GetAcademyCoachIdsAsync(_academyId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([coachId]);
+
+        Athlete? createdAthlete = null;
+        _athleteRepository
+            .Setup(x => x.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()))
+            .Callback<Athlete, CancellationToken>((a, _) => createdAthlete = a);
+
+        var request = BuildRequest();
+        request.CoachIds = [coachId];
+        var handler = CreateHandler();
+
+        await handler.Handle(new CreateAcademyAthleteCommand(_academyId, request), CancellationToken.None);
+
+        Assert.NotNull(createdAthlete);
+        var mapping = Assert.Single(createdAthlete!.CoachMappings);
+        Assert.Equal(coachId, mapping.CoachId);
+        Assert.Equal(_academyId, mapping.AcademyId);
+        Assert.Equal(createdAthlete.Id, mapping.AthleteId);
+    }
+
+    [Fact]
+    public async Task Create_CoachNotInAcademy_ThrowsValidationException()
+    {
+        var request = BuildRequest();
+        request.CoachIds = [Guid.NewGuid()];
+
+        var handler = CreateHandler();
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new CreateAcademyAthleteCommand(_academyId, request), CancellationToken.None));
+
+        Assert.True(exception.Errors.ContainsKey("coachIds"));
+    }
+
     private CreateAcademyAthleteCommandHandler CreateHandler()
         => new(
             _academyRepository.Object,
             _userRepository.Object,
             _roleRepository.Object,
             _athleteRepository.Object,
+            _coachAthleteRepository.Object,
             _publicUserIdGenerator.Object,
             _temporaryPasswordGenerator.Object,
             _passwordHasher.Object,

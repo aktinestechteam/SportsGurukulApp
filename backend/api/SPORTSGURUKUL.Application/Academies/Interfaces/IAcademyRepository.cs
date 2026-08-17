@@ -20,6 +20,20 @@ public interface IAcademyRepository
         Guid ownerUserId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns the ids of every athlete associated with the academy.
+    /// </summary>
+    Task<List<Guid>> GetAcademyAthleteIdsAsync(
+        Guid academyId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the ids of every coach associated with the academy.
+    /// </summary>
+    Task<List<Guid>> GetAcademyCoachIdsAsync(
+        Guid academyId,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(Academy academy, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(Academy academy, CancellationToken cancellationToken = default);

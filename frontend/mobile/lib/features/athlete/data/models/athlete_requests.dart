@@ -14,6 +14,7 @@ class AthleteRequest {
     this.secondarySportId,
     this.address,
     this.emergencyContact,
+    this.coachIds = const [],
   });
 
   final String firstName;
@@ -27,6 +28,7 @@ class AthleteRequest {
   final String? secondarySportId;
   final String? address;
   final String? emergencyContact;
+  final List<String> coachIds;
 
   Map<String, dynamic> toJson() => {
     'firstName': firstName,
@@ -40,6 +42,7 @@ class AthleteRequest {
     'secondarySportId': secondarySportId,
     'address': address,
     'emergencyContact': emergencyContact,
+    'coachIds': coachIds,
   };
 
   factory AthleteRequest.fromInput(AthleteRequestInput input) => AthleteRequest(
@@ -54,6 +57,7 @@ class AthleteRequest {
     secondarySportId: input.secondarySportId,
     address: input.address,
     emergencyContact: input.emergencyContact,
+    coachIds: input.coachIds,
   );
 
   static String _formatDate(DateTime date) {

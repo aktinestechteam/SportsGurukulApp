@@ -6,6 +6,7 @@ using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
+using SPORTSGURUKUL.Domain.Entities;
 
 namespace SPORTSGURUKUL.Application.Coaches.Queries;
 
@@ -16,15 +17,18 @@ public sealed class GetAcademyCoachesQueryHandler
 {
     private readonly IAcademyRepository _academyRepository;
     private readonly ICoachRepository _coachRepository;
+    private readonly ICoachAthleteRepository _coachAthleteRepository;
     private readonly ICurrentUserService _currentUserService;
 
     public GetAcademyCoachesQueryHandler(
         IAcademyRepository academyRepository,
         ICoachRepository coachRepository,
+        ICoachAthleteRepository coachAthleteRepository,
         ICurrentUserService currentUserService)
     {
         _academyRepository = academyRepository;
         _coachRepository = coachRepository;
+        _coachAthleteRepository = coachAthleteRepository;
         _currentUserService = currentUserService;
     }
 
@@ -45,9 +49,17 @@ public sealed class GetAcademyCoachesQueryHandler
             ?? throw AppException.NotFound("Academy not found.");
 
         var associations = await _coachRepository.GetByAcademyAsync(query.AcademyId, cancellationToken);
+        var mappings = await _coachAthleteRepository.GetByAcademyAsync(query.AcademyId, cancellationToken);
+        var mappingsByCoach = mappings
+            .GroupBy(ca => ca.CoachId)
+            .ToDictionary(g => g.Key, g => (IEnumerable<CoachAthlete>)g);
 
         return ApiResponse<List<CoachResponse>>.Ok(
-            associations.Select(CoachResponseMapper.Map).ToList(),
+            associations
+                .Select(a => CoachResponseMapper.Map(
+                    a,
+                    mappingsByCoach.TryGetValue(a.CoachId, out var coachMappings) ? coachMappings : null))
+                .ToList(),
             "Coaches retrieved successfully.");
     }
 }
