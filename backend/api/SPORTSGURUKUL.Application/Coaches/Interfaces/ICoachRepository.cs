@@ -70,6 +70,13 @@ public interface ICoachRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Returns every coach sport assignment whose SportId is in the given set.
+    /// </summary>
+    Task<List<CoachSport>> GetSportsBySportIdsAsync(
+        IEnumerable<Guid> sportIds,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Links a coach to a sport assignment.
     /// </summary>
     Task AddSportAsync(

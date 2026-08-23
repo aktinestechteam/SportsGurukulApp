@@ -110,6 +110,14 @@ public class CoachRepository : ICoachRepository
             .Where(c => sportIds.Contains(c.SportId))
             .ExecuteDeleteAsync(cancellationToken);
 
+    public Task<List<CoachSport>> GetSportsBySportIdsAsync(
+        IEnumerable<Guid> sportIds,
+        CancellationToken cancellationToken = default)
+        => _context.CoachSports
+            .AsNoTracking()
+            .Where(c => sportIds.Contains(c.SportId))
+            .ToListAsync(cancellationToken);
+
     public Task AddSportAsync(
         Guid coachId,
         Guid sportId,

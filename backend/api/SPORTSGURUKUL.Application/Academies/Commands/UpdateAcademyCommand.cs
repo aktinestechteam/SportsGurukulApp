@@ -75,19 +75,23 @@ public sealed class UpdateAcademyCommandHandler : IRequestHandler<UpdateAcademyC
         var oldSportIdByName = academy.Sports
             .ToDictionary(s => s.Name, s => s.Id);
 
-        var oldCoachSports = academy.CoachAssociations
-            .SelectMany(ca => ca.Coach.Sports)
-            .Where(cs => oldSportIdByName.ContainsValue(cs.SportId))
-            .Select(cs => new { cs.CoachId, SportName = cs.Sport.Name, cs.Specialization })
-            .ToList();
-
-        var oldAthleteSports = academy.AthleteAssociations
-            .SelectMany(aa => aa.Athlete.Sports)
-            .Where(as2 => oldSportIdByName.ContainsValue(as2.SportId))
-            .Select(as2 => new { as2.AthleteId, SportName = as2.Sport.Name, as2.IsPrimary })
-            .ToList();
-
         var oldSportIds = oldSportIdByName.Values.ToList();
+
+        // Query coach and athlete sport assignments separately so we don't
+        // load AcademySport through the CoachSport/AthleteSport navigation
+        // (which would cause EF tracking conflicts when the factory clears
+        // the sports collection).
+        var oldCoachSports = oldSportIds.Count > 0
+            ? (await _coachRepository.GetSportsBySportIdsAsync(oldSportIds, cancellationToken))
+                .Select(cs => new { cs.CoachId, SportName = oldSportIdByName.First(kv => kv.Value == cs.SportId).Key, cs.Specialization })
+                .ToList()
+            : [];
+
+        var oldAthleteSports = oldSportIds.Count > 0
+            ? (await _athleteRepository.GetSportsBySportIdsAsync(oldSportIds, cancellationToken))
+                .Select(as2 => new { as2.AthleteId, SportName = oldSportIdByName.First(kv => kv.Value == as2.SportId).Key, as2.IsPrimary })
+                .ToList()
+            : [];
 
         // Remove CoachSports and AthleteSports that reference the old
         // academy sport IDs so the restrictive FK doesn't block the delete.

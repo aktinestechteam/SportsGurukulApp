@@ -71,6 +71,13 @@ public interface IAthleteRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Returns every athlete sport assignment whose SportId is in the given set.
+    /// </summary>
+    Task<List<AthleteSport>> GetSportsBySportIdsAsync(
+        IEnumerable<Guid> sportIds,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Links an athlete to a sport assignment.
     /// </summary>
     Task AddSportAsync(
