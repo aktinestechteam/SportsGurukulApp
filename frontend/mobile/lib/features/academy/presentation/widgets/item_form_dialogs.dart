@@ -6,6 +6,12 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/repositories/academy_repository.dart';
 import 'predefined_sports.dart';
 
+/// Form dialogs stretch to the width available inside the themed dialog
+/// insets on small viewports, but are capped on large screens so they stay
+/// centered and readable instead of hugging their content or going edge to
+/// edge.
+const BoxConstraints _formDialogConstraints = BoxConstraints(maxWidth: 600);
+
 Future<AcademyBranchInput?> showBranchDialog(
   BuildContext context, {
   AcademyBranchInput? initial,
@@ -57,8 +63,7 @@ abstract class _ItemDialog<T> extends StatefulWidget {
   String get title;
 }
 
-abstract class _ItemDialogState<T, W extends _ItemDialog<T>>
-    extends State<W> {
+abstract class _ItemDialogState<T, W extends _ItemDialog<T>> extends State<W> {
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -95,8 +100,14 @@ abstract class _ItemDialogState<T, W extends _ItemDialog<T>>
   AlertDialog dialog({required Widget content}) {
     return AlertDialog(
       title: Text(widget.title),
-      content: SingleChildScrollView(
-        child: Form(key: _formKey, child: content),
+      content: ConstrainedBox(
+        constraints: _formDialogConstraints,
+        child: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Form(key: _formKey, child: content),
+          ),
+        ),
       ),
       actionsPadding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -109,11 +120,7 @@ abstract class _ItemDialogState<T, W extends _ItemDialog<T>>
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        AppButton(
-          label: 'Save',
-          expanded: false,
-          onPressed: _submit,
-        ),
+        AppButton(label: 'Save', expanded: false, onPressed: _submit),
       ],
     );
   }
@@ -129,8 +136,8 @@ class _BranchDialog extends _ItemDialog<AcademyBranchInput> {
   State<_BranchDialog> createState() => _BranchDialogState();
 }
 
-class _BranchDialogState extends _ItemDialogState<
-    AcademyBranchInput, _BranchDialog> {
+class _BranchDialogState
+    extends _ItemDialogState<AcademyBranchInput, _BranchDialog> {
   late final _name = TextEditingController(text: widget.initial?.name);
   late final _address = TextEditingController(text: widget.initial?.address);
   late final _city = TextEditingController(text: widget.initial?.city);
@@ -265,49 +272,54 @@ class _SportsPickerDialogState extends State<_SportsPickerDialog> {
   }
 
   void _submit() {
-    Navigator.of(context).pop([
-      for (final name in _selected) AcademySportInput(name: name),
-    ]);
+    Navigator.of(
+      context,
+    ).pop([for (final name in _selected) AcademySportInput(name: name)]);
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Select Sports'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 420,
-        child: ListView(
-          children: [
-            for (final entry in kSportCatalog.entries) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xs,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.xs,
-                ),
-                child: Text(
-                  entry.key,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
+      content: ConstrainedBox(
+        constraints: _formDialogConstraints,
+        child: SizedBox(
+          width: double.maxFinite,
+          height: 420,
+          child: ListView(
+            children: [
+              for (final entry in kSportCatalog.entries) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xs,
+                    AppSpacing.md,
+                    AppSpacing.xs,
+                    AppSpacing.xs,
+                  ),
+                  child: Text(
+                    entry.key,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
-              ),
-              for (final sport in entry.value)
-                CheckboxListTile(
-                  dense: true,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: _isAdded(sport) || _selected.contains(sport),
-                  onChanged: _isAdded(sport)
-                      ? null
-                      : (value) => _toggle(sport, value),
-                  title: Text(sport),
-                  subtitle: _isAdded(sport) ? const Text('Already added') : null,
-                ),
+                for (final sport in entry.value)
+                  CheckboxListTile(
+                    dense: true,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: _isAdded(sport) || _selected.contains(sport),
+                    onChanged: _isAdded(sport)
+                        ? null
+                        : (value) => _toggle(sport, value),
+                    title: Text(sport),
+                    subtitle: _isAdded(sport)
+                        ? const Text('Already added')
+                        : null,
+                  ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       actionsPadding: const EdgeInsets.fromLTRB(
@@ -343,8 +355,8 @@ class _FacilityDialog extends _ItemDialog<AcademyFacilityInput> {
   State<_FacilityDialog> createState() => _FacilityDialogState();
 }
 
-class _FacilityDialogState extends _ItemDialogState<
-    AcademyFacilityInput, _FacilityDialog> {
+class _FacilityDialogState
+    extends _ItemDialogState<AcademyFacilityInput, _FacilityDialog> {
   late final _name = TextEditingController(text: widget.initial?.name);
   late final _type = TextEditingController(text: widget.initial?.type);
   late final _capacity = TextEditingController(
@@ -422,8 +434,8 @@ class _MembershipDialog extends _ItemDialog<AcademyMembershipInput> {
   State<_MembershipDialog> createState() => _MembershipDialogState();
 }
 
-class _MembershipDialogState extends _ItemDialogState<
-    AcademyMembershipInput, _MembershipDialog> {
+class _MembershipDialogState
+    extends _ItemDialogState<AcademyMembershipInput, _MembershipDialog> {
   late final _name = TextEditingController(text: widget.initial?.name);
   late final _description = TextEditingController(
     text: widget.initial?.description,
@@ -494,9 +506,7 @@ class _MembershipDialogState extends _ItemDialogState<
           AppTextField(
             controller: _price,
             label: 'Price',
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textInputAction: TextInputAction.done,
           ),
         ],
