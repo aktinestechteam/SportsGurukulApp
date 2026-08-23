@@ -389,42 +389,55 @@ class _AcademyCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: _ActionTile(
-                  icon: Icons.sports,
-                  title: 'Manage Coach',
-                  subtitle: 'Coaching staff',
-                  onTap: () async {
-                    await context.push(
-                      '/academies/${academy.id}/coaches',
-                      extra: academy,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final coachTile = _ActionTile(
+                icon: Icons.sports,
+                title: 'Manage Coach',
+                subtitle: 'Manage academy coaches',
+                onTap: () async {
+                  await context.push(
+                    '/academies/${academy.id}/coaches',
+                    extra: academy,
+                  );
+                  if (context.mounted) {
+                    context.read<AcademyProvider>().loadAcademies();
+                  }
+                },
+              );
+              final athleteTile = _ActionTile(
+                icon: Icons.directions_run_outlined,
+                title: 'Manage Athlete',
+                subtitle: 'Manage academy athletes',
+                onTap: () async {
+                  await context.push(
+                    '/academies/${academy.id}/athletes',
+                    extra: academy,
+                  );
+                  if (context.mounted) {
+                    context.read<AcademyProvider>().loadAcademies();
+                  }
+                },
+              );
+              // Side-by-side only when each tile keeps enough text width;
+              // otherwise stack the tiles full-width like list actions.
+              return constraints.maxWidth >= 560
+                  ? Row(
+                      children: [
+                        Expanded(child: coachTile),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(child: athleteTile),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        coachTile,
+                        const SizedBox(height: AppSpacing.sm),
+                        athleteTile,
+                      ],
                     );
-                    if (context.mounted) {
-                      context.read<AcademyProvider>().loadAcademies();
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _ActionTile(
-                  icon: Icons.directions_run_outlined,
-                  title: 'Manage Athlete',
-                  subtitle: 'Athletes & teams',
-                  onTap: () async {
-                    await context.push(
-                      '/academies/${academy.id}/athletes',
-                      extra: academy,
-                    );
-                    if (context.mounted) {
-                      context.read<AcademyProvider>().loadAcademies();
-                    }
-                  },
-                ),
-              ),
-            ],
+            },
           ),
         ],
       ),
@@ -574,7 +587,10 @@ class _ActionTileState extends State<_ActionTile> {
       child: AnimatedContainer(
         duration: AppMotion.fast,
         curve: Curves.easeOut,
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: _hovered
               ? AuthPalette.red.withValues(alpha: 0.05)
@@ -591,63 +607,62 @@ class _ActionTileState extends State<_ActionTile> {
           child: InkWell(
             onTap: widget.onTap,
             borderRadius: AppRadii.brMedium,
-            child: Padding(
-              padding: const EdgeInsets.all(2),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AuthPalette.red.withValues(alpha: 0.08),
-                      borderRadius: AppRadii.brSmall,
-                    ),
-                    child: Icon(
-                      widget.icon,
-                      size: 19,
-                      color: AuthPalette.red,
-                    ),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AuthPalette.red.withValues(alpha: 0.08),
+                    borderRadius: AppRadii.brSmall,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            widget.title,
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AuthPalette.textPrimary(context),
-                            ),
-                          ),
+                  child: Icon(
+                    widget.icon,
+                    size: AppIconSize.md,
+                    color: AuthPalette.red,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                          color: AuthPalette.textPrimary(context),
                         ),
-                        Text(
-                          widget.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AuthPalette.subtitle(context),
-                          ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        widget.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.3,
+                          color: AuthPalette.subtitle(context),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.xxs),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: _hovered
-                        ? AuthPalette.red
-                        : AuthPalette.muted(context),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: AppIconSize.sm,
+                  color: _hovered
+                      ? AuthPalette.red
+                      : AuthPalette.muted(context),
+                ),
+              ],
             ),
           ),
         ),
