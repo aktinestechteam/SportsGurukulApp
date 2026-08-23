@@ -1,0 +1,17 @@
+# IDE / editor
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Notes
+ui.txt
