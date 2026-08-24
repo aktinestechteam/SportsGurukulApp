@@ -27,6 +27,7 @@ public class Academy
     public ICollection<AcademyCoach> CoachAssociations { get; set; } = [];
     public ICollection<AcademyAthlete> AthleteAssociations { get; set; } = [];
     public ICollection<CoachAthlete> CoachAthleteMappings { get; set; } = [];
+    public ICollection<Batch> Batches { get; set; } = [];
 
     public void Touch() => UpdatedAt = DateTime.UtcNow;
 }

@@ -37,8 +37,16 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<AcademyAthlete> AcademyAthletes => Set<AcademyAthlete>();
     public DbSet<AthleteSport> AthleteSports => Set<AthleteSport>();
 
+    public DbSet<Batch> Batches => Set<Batch>();
+    public DbSet<BatchScheduleSlot> BatchScheduleSlots => Set<BatchScheduleSlot>();
+    public DbSet<BatchCoach> BatchCoaches => Set<BatchCoach>();
+    public DbSet<BatchAthlete> BatchAthletes => Set<BatchAthlete>();
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => base.SaveChangesAsync(cancellationToken);
+
+    public Task<int> ExecuteSqlRawAsync(string sql, object[] parameters, CancellationToken cancellationToken = default)
+        => Database.ExecuteSqlRawAsync(sql, parameters, cancellationToken);
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {

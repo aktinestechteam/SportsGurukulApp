@@ -16,6 +16,9 @@ import '../features/authentication/presentation/providers/auth_provider.dart';
 import '../features/athlete/domain/entities/athlete.dart';
 import '../features/athlete/presentation/pages/add_athlete_page.dart';
 import '../features/athlete/presentation/pages/athletes_list_page.dart';
+import '../features/batch/domain/entities/batch.dart';
+import '../features/batch/presentation/pages/add_batch_page.dart';
+import '../features/batch/presentation/pages/batches_list_page.dart';
 import '../features/coach/domain/entities/coach.dart';
 import '../features/coach/presentation/pages/add_coach_page.dart';
 import '../features/coach/presentation/pages/coaches_list_page.dart';
@@ -151,6 +154,32 @@ class AppRouter {
               academyId: state.pathParameters['academyId'] ?? '',
               academy: extra.academy,
               athlete: extra.athlete,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/academies/:academyId/batches',
+          builder: (context, state) => BatchesListPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/batches/add',
+          builder: (context, state) => AddBatchPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            academy: state.extra as Academy?,
+          ),
+        ),
+        GoRoute(
+          path: '/academies/:academyId/batches/:batchId/edit',
+          builder: (context, state) {
+            final extra =
+                state.extra as ({Academy? academy, Batch? batch});
+            return AddBatchPage(
+              academyId: state.pathParameters['academyId'] ?? '',
+              academy: extra.academy,
+              batch: extra.batch,
             );
           },
         ),

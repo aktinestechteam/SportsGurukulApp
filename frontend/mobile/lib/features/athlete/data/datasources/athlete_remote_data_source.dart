@@ -15,6 +15,14 @@ class AthleteRemoteDataSource {
         .toList();
   }
 
+  Future<List<Athlete>> getAthletesBySport(String academyId, String sportId) async {
+    final data = await _api.get('/academies/$academyId/athletes?sportId=$sportId');
+    if (data is! List) return const [];
+    return data
+        .map((e) => Athlete.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
   Future<Athlete> createAthlete(String academyId, AthleteRequest request) async {
     final data = await _api.post('/academies/$academyId/athletes',
         body: request.toJson());

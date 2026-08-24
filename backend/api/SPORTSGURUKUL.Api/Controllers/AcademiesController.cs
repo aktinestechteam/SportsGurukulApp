@@ -78,9 +78,14 @@ public class AcademiesController : ControllerBase
     }
 
     [HttpGet("{academyId:guid}/coaches")]
-    public async Task<IActionResult> GetCoaches(Guid academyId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCoaches(
+        Guid academyId,
+        [FromQuery] Guid? sportId,
+        CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetAcademyCoachesQuery(academyId), cancellationToken);
+        var result = await _mediator.Send(
+            new GetAcademyCoachesQuery(academyId, sportId),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -122,9 +127,14 @@ public class AcademiesController : ControllerBase
     }
 
     [HttpGet("{academyId:guid}/athletes")]
-    public async Task<IActionResult> GetAthletes(Guid academyId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAthletes(
+        Guid academyId,
+        [FromQuery] Guid? sportId,
+        CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetAcademyAthletesQuery(academyId), cancellationToken);
+        var result = await _mediator.Send(
+            new GetAcademyAthletesQuery(academyId, sportId),
+            cancellationToken);
         return Ok(result);
     }
 

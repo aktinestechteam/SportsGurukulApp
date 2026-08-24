@@ -419,6 +419,20 @@ class _AcademyCard extends StatelessWidget {
                   }
                 },
               );
+              final batchTile = _ActionTile(
+                icon: Icons.groups_outlined,
+                title: 'Manage Batch',
+                subtitle: 'Manage academy batches',
+                onTap: () async {
+                  await context.push(
+                    '/academies/${academy.id}/batches',
+                    extra: academy,
+                  );
+                  if (context.mounted) {
+                    context.read<AcademyProvider>().loadAcademies();
+                  }
+                },
+              );
               // Side-by-side only when each tile keeps enough text width;
               // otherwise stack the tiles full-width like list actions.
               return constraints.maxWidth >= 560
@@ -427,6 +441,8 @@ class _AcademyCard extends StatelessWidget {
                         Expanded(child: coachTile),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(child: athleteTile),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(child: batchTile),
                       ],
                     )
                   : Column(
@@ -435,6 +451,8 @@ class _AcademyCard extends StatelessWidget {
                         coachTile,
                         const SizedBox(height: AppSpacing.sm),
                         athleteTile,
+                        const SizedBox(height: AppSpacing.sm),
+                        batchTile,
                       ],
                     );
             },

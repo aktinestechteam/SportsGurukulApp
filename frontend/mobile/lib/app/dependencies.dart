@@ -32,6 +32,15 @@ import '../features/authentication/domain/usecases/sign_in.dart';
 import '../features/authentication/domain/usecases/sign_out.dart';
 import '../features/authentication/domain/usecases/sign_up.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
+import '../features/batch/data/datasources/batch_remote_data_source.dart';
+import '../features/batch/data/repositories/batch_repository_impl.dart';
+import '../features/batch/domain/repositories/batch_repository.dart';
+import '../features/batch/domain/usecases/create_batch.dart';
+import '../features/batch/domain/usecases/delete_batch.dart';
+import '../features/batch/domain/usecases/get_batch.dart';
+import '../features/batch/domain/usecases/get_batches.dart';
+import '../features/batch/domain/usecases/update_batch.dart';
+import '../features/batch/presentation/providers/batch_provider.dart';
 import '../features/coach/data/datasources/coach_remote_data_source.dart';
 import '../features/coach/data/repositories/coach_repository_impl.dart';
 import '../features/coach/domain/repositories/coach_repository.dart';
@@ -50,6 +59,7 @@ class Dependencies {
   static late final AcademyProvider academyProvider;
   static late final CoachProvider coachProvider;
   static late final AthleteProvider athleteProvider;
+  static late final BatchProvider batchProvider;
 
   static void initialize() {
     tokenStorage = TokenStorage(storage: const FlutterSecureStorage());
@@ -112,6 +122,19 @@ class Dependencies {
       getAthletes: GetAthletes(athleteRepository),
       updateAthlete: UpdateAthlete(athleteRepository),
       deleteAthlete: DeleteAthlete(athleteRepository),
+    );
+
+    final batchDataSource = BatchRemoteDataSource(apiClient: apiClient);
+    final BatchRepository batchRepository = BatchRepositoryImpl(
+      dataSource: batchDataSource,
+    );
+
+    batchProvider = BatchProvider(
+      createBatch: CreateBatch(batchRepository),
+      getBatches: GetBatches(batchRepository),
+      getBatch: GetBatch(batchRepository),
+      updateBatch: UpdateBatch(batchRepository),
+      deleteBatch: DeleteBatch(batchRepository),
     );
 
     apiClient.onAuthExpired = authProvider.handleSessionExpired;

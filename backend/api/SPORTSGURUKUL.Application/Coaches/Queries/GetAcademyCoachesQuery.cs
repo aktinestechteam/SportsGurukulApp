@@ -10,7 +10,9 @@ using SPORTSGURUKUL.Domain.Entities;
 
 namespace SPORTSGURUKUL.Application.Coaches.Queries;
 
-public sealed record GetAcademyCoachesQuery(Guid AcademyId) : IRequest<ApiResponse<List<CoachResponse>>>;
+public sealed record GetAcademyCoachesQuery(
+    Guid AcademyId,
+    Guid? SportId = null) : IRequest<ApiResponse<List<CoachResponse>>>;
 
 public sealed class GetAcademyCoachesQueryHandler
     : IRequestHandler<GetAcademyCoachesQuery, ApiResponse<List<CoachResponse>>>
@@ -49,13 +51,20 @@ public sealed class GetAcademyCoachesQueryHandler
             ?? throw AppException.NotFound("Academy not found.");
 
         var associations = await _coachRepository.GetByAcademyAsync(query.AcademyId, cancellationToken);
+
+        var filtered = query.SportId.HasValue
+            ? associations.Where(a =>
+                a.Coach.Sports.Any(cs => cs.SportId == query.SportId.Value))
+                .ToList()
+            : associations;
+
         var mappings = await _coachAthleteRepository.GetByAcademyAsync(query.AcademyId, cancellationToken);
         var mappingsByCoach = mappings
             .GroupBy(ca => ca.CoachId)
             .ToDictionary(g => g.Key, g => (IEnumerable<CoachAthlete>)g);
 
         return ApiResponse<List<CoachResponse>>.Ok(
-            associations
+            filtered
                 .Select(a => CoachResponseMapper.Map(
                     a,
                     mappingsByCoach.TryGetValue(a.CoachId, out var coachMappings) ? coachMappings : null))
