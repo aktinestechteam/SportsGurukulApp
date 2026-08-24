@@ -150,4 +150,20 @@ public class CoachAthleteRepository : ICoachAthleteRepository
         => _context.CoachAthletes
             .Where(ca => ca.AthleteId == athleteId && ca.AcademyId == academyId)
             .ExecuteDeleteAsync(cancellationToken);
+
+    public Task<List<CoachAthlete>> GetByCoachAsync(
+        Guid coachId,
+        CancellationToken cancellationToken = default)
+        => _context.CoachAthletes
+            .AsNoTracking()
+            .Include(ca => ca.Athlete)
+                .ThenInclude(a => a.User)
+            .Include(ca => ca.Athlete)
+                .ThenInclude(a => a.Sports)
+                    .ThenInclude(s => s.Sport)
+            .Include(ca => ca.Academy)
+            .Where(ca => ca.CoachId == coachId)
+            .OrderBy(ca => ca.Athlete.User.FirstName)
+            .ThenBy(ca => ca.Athlete.User.LastName)
+            .ToListAsync(cancellationToken);
 }

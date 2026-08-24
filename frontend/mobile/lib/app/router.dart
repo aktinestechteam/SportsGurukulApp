@@ -3,6 +3,17 @@ import 'package:go_router/go_router.dart';
 import '../features/academy/domain/entities/academy.dart';
 import '../features/academy/presentation/pages/academy_list_page.dart';
 import '../features/academy/presentation/pages/academy_setup_page.dart';
+import '../features/athlete/domain/entities/athlete.dart';
+import '../features/athlete/presentation/pages/add_athlete_page.dart';
+import '../features/athlete/presentation/pages/athlete_dashboard_page.dart';
+import '../features/athlete/presentation/pages/athletes_list_page.dart';
+import '../features/batch/domain/entities/batch.dart';
+import '../features/batch/presentation/pages/add_batch_page.dart';
+import '../features/batch/presentation/pages/batches_list_page.dart';
+import '../features/coach/domain/entities/coach.dart';
+import '../features/coach/presentation/pages/add_coach_page.dart';
+import '../features/coach/presentation/pages/coach_dashboard_page.dart';
+import '../features/coach/presentation/pages/coaches_list_page.dart';
 import '../features/authentication/presentation/pages/change_password_page.dart';
 import '../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../features/authentication/presentation/pages/home_page.dart';
@@ -12,20 +23,24 @@ import '../features/authentication/presentation/pages/settings_page.dart';
 import '../features/authentication/presentation/pages/sign_in_page.dart';
 import '../features/authentication/presentation/pages/sign_up_page.dart';
 import '../features/authentication/presentation/pages/splash_page.dart';
+import '../features/authentication/domain/entities/user.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
-import '../features/athlete/domain/entities/athlete.dart';
-import '../features/athlete/presentation/pages/add_athlete_page.dart';
-import '../features/athlete/presentation/pages/athletes_list_page.dart';
-import '../features/batch/domain/entities/batch.dart';
-import '../features/batch/presentation/pages/add_batch_page.dart';
-import '../features/batch/presentation/pages/batches_list_page.dart';
-import '../features/coach/domain/entities/coach.dart';
-import '../features/coach/presentation/pages/add_coach_page.dart';
-import '../features/coach/presentation/pages/coaches_list_page.dart';
 import 'dependencies.dart';
 
 class AppRouter {
   AppRouter._();
+
+  static String _roleHome(User? user) {
+    if (user == null) return '/home';
+    final roles = user.roles.map((r) => r.toLowerCase()).toSet();
+    if (roles.contains('academycoach') || roles.contains('coach')) {
+      return '/coach/dashboard';
+    }
+    if (roles.contains('academyathlete') || roles.contains('athlete')) {
+      return '/athlete/dashboard';
+    }
+    return '/home';
+  }
 
   static GoRouter create() {
     return GoRouter(
@@ -52,7 +67,7 @@ class AppRouter {
 
         if (authenticated) {
           if (publicOnly || location == '/') {
-            return '/home';
+            return _roleHome(auth.user);
           }
           return null;
         }
@@ -86,6 +101,14 @@ class AppRouter {
           builder: (context, state) => const ChangePasswordPage(),
         ),
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+        GoRoute(
+          path: '/coach/dashboard',
+          builder: (context, state) => const CoachDashboardPage(),
+        ),
+        GoRoute(
+          path: '/athlete/dashboard',
+          builder: (context, state) => const AthleteDashboardPage(),
+        ),
         GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
         GoRoute(
           path: '/settings',

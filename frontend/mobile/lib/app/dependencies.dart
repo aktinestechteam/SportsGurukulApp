@@ -41,13 +41,18 @@ import '../features/batch/domain/usecases/get_batch.dart';
 import '../features/batch/domain/usecases/get_batches.dart';
 import '../features/batch/domain/usecases/update_batch.dart';
 import '../features/batch/presentation/providers/batch_provider.dart';
+import '../features/coach/data/datasources/coach_profile_remote_data_source.dart';
 import '../features/coach/data/datasources/coach_remote_data_source.dart';
+import '../features/coach/data/repositories/coach_profile_repository_impl.dart';
 import '../features/coach/data/repositories/coach_repository_impl.dart';
+import '../features/coach/domain/repositories/coach_profile_repository.dart';
 import '../features/coach/domain/repositories/coach_repository.dart';
 import '../features/coach/domain/usecases/create_coach.dart';
 import '../features/coach/domain/usecases/delete_coach.dart';
+import '../features/coach/domain/usecases/get_coach_profile.dart';
 import '../features/coach/domain/usecases/get_coaches.dart';
 import '../features/coach/domain/usecases/update_coach.dart';
+import '../features/coach/presentation/providers/coach_profile_provider.dart';
 import '../features/coach/presentation/providers/coach_provider.dart';
 
 class Dependencies {
@@ -58,6 +63,7 @@ class Dependencies {
   static late final AuthProvider authProvider;
   static late final AcademyProvider academyProvider;
   static late final CoachProvider coachProvider;
+  static late final CoachProfileProvider coachProfileProvider;
   static late final AthleteProvider athleteProvider;
   static late final BatchProvider batchProvider;
 
@@ -92,17 +98,30 @@ class Dependencies {
       dataSource: academyDataSource,
     );
 
+    final coachDataSource = CoachRemoteDataSource(apiClient: apiClient);
+    final CoachRepository coachRepository = CoachRepositoryImpl(
+      dataSource: coachDataSource,
+    );
+
+    final athleteDataSource = AthleteRemoteDataSource(apiClient: apiClient);
+    final AthleteRepository athleteRepository = AthleteRepositoryImpl(
+      dataSource: athleteDataSource,
+    );
+
+    final batchDataSource = BatchRemoteDataSource(apiClient: apiClient);
+    final BatchRepository batchRepository = BatchRepositoryImpl(
+      dataSource: batchDataSource,
+    );
+
     academyProvider = AcademyProvider(
       createAcademy: CreateAcademy(academyRepository),
       getAcademies: GetAcademies(academyRepository),
       getAcademy: GetAcademy(academyRepository),
       updateAcademy: UpdateAcademy(academyRepository),
       deleteAcademy: DeleteAcademy(academyRepository),
-    );
-
-    final coachDataSource = CoachRemoteDataSource(apiClient: apiClient);
-    final CoachRepository coachRepository = CoachRepositoryImpl(
-      dataSource: coachDataSource,
+      batchRepository: batchRepository,
+      coachRepository: coachRepository,
+      athleteRepository: athleteRepository,
     );
 
     coachProvider = CoachProvider(
@@ -112,9 +131,12 @@ class Dependencies {
       deleteCoach: DeleteCoach(coachRepository),
     );
 
-    final athleteDataSource = AthleteRemoteDataSource(apiClient: apiClient);
-    final AthleteRepository athleteRepository = AthleteRepositoryImpl(
-      dataSource: athleteDataSource,
+    final coachProfileDataSource = CoachProfileRemoteDataSource(apiClient: apiClient);
+    final CoachProfileRepository coachProfileRepository = CoachProfileRepositoryImpl(
+      dataSource: coachProfileDataSource,
+    );
+    coachProfileProvider = CoachProfileProvider(
+      getCoachProfile: GetCoachProfile(coachProfileRepository),
     );
 
     athleteProvider = AthleteProvider(
@@ -122,11 +144,6 @@ class Dependencies {
       getAthletes: GetAthletes(athleteRepository),
       updateAthlete: UpdateAthlete(athleteRepository),
       deleteAthlete: DeleteAthlete(athleteRepository),
-    );
-
-    final batchDataSource = BatchRemoteDataSource(apiClient: apiClient);
-    final BatchRepository batchRepository = BatchRepositoryImpl(
-      dataSource: batchDataSource,
     );
 
     batchProvider = BatchProvider(

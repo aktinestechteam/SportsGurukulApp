@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using SPORTSGURUKUL.Application.Academies.Interfaces;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Batches.Interfaces;
 using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
@@ -35,6 +36,7 @@ public sealed class DeleteAcademyAthleteCommandHandler
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAthleteRepository _athleteRepository;
     private readonly ICoachAthleteRepository _coachAthleteRepository;
+    private readonly IBatchRepository _batchRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAcademyAthleteCommandHandler> _logger;
@@ -45,6 +47,7 @@ public sealed class DeleteAcademyAthleteCommandHandler
         IRefreshTokenRepository refreshTokenRepository,
         IAthleteRepository athleteRepository,
         ICoachAthleteRepository coachAthleteRepository,
+        IBatchRepository batchRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAcademyAthleteCommandHandler> logger)
@@ -54,6 +57,7 @@ public sealed class DeleteAcademyAthleteCommandHandler
         _refreshTokenRepository = refreshTokenRepository;
         _athleteRepository = athleteRepository;
         _coachAthleteRepository = coachAthleteRepository;
+        _batchRepository = batchRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -88,6 +92,11 @@ public sealed class DeleteAcademyAthleteCommandHandler
         try
         {
             await _coachAthleteRepository.RemoveByAthleteAsync(
+                athleteId,
+                command.AcademyId,
+                cancellationToken);
+
+            await _batchRepository.RemoveAthleteFromBatchesAsync(
                 athleteId,
                 command.AcademyId,
                 cancellationToken);

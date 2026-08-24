@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using SPORTSGURUKUL.Application.Academies.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Batches.Interfaces;
 using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
@@ -34,6 +35,7 @@ public sealed class DeleteAcademyCoachCommandHandler
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ICoachRepository _coachRepository;
     private readonly ICoachAthleteRepository _coachAthleteRepository;
+    private readonly IBatchRepository _batchRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAcademyCoachCommandHandler> _logger;
@@ -44,6 +46,7 @@ public sealed class DeleteAcademyCoachCommandHandler
         IRefreshTokenRepository refreshTokenRepository,
         ICoachRepository coachRepository,
         ICoachAthleteRepository coachAthleteRepository,
+        IBatchRepository batchRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAcademyCoachCommandHandler> logger)
@@ -53,6 +56,7 @@ public sealed class DeleteAcademyCoachCommandHandler
         _refreshTokenRepository = refreshTokenRepository;
         _coachRepository = coachRepository;
         _coachAthleteRepository = coachAthleteRepository;
+        _batchRepository = batchRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -87,6 +91,11 @@ public sealed class DeleteAcademyCoachCommandHandler
         try
         {
             await _coachAthleteRepository.RemoveByCoachAsync(
+                coachId,
+                command.AcademyId,
+                cancellationToken);
+
+            await _batchRepository.RemoveCoachFromBatchesAsync(
                 coachId,
                 command.AcademyId,
                 cancellationToken);

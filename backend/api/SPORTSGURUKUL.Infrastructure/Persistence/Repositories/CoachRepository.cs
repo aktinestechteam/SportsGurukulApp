@@ -145,4 +145,17 @@ public class CoachRepository : ICoachRepository
             .Where(c => c.Id == coachId)
             .ExecuteDeleteAsync(cancellationToken);
     }
+
+    public Task<Coach?> GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+        => _context.Coaches
+            .AsNoTracking()
+            .Include(c => c.User)
+            .Include(c => c.AcademyAssociations)
+                .ThenInclude(a => a.Academy)
+                    .ThenInclude(ac => ac.Sports)
+            .Include(c => c.Sports)
+                .ThenInclude(cs => cs.Sport)
+            .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
 }

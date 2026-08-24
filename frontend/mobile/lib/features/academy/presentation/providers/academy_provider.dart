@@ -8,6 +8,9 @@ import '../../domain/usecases/delete_academy.dart';
 import '../../domain/usecases/get_academies.dart';
 import '../../domain/usecases/get_academy.dart';
 import '../../domain/usecases/update_academy.dart';
+import '../../../batch/domain/repositories/batch_repository.dart';
+import '../../../coach/domain/repositories/coach_repository.dart';
+import '../../../athlete/domain/repositories/athlete_repository.dart';
 
 enum AcademyStatus {
   initial,
@@ -25,17 +28,26 @@ class AcademyProvider extends ChangeNotifier {
     required GetAcademy getAcademy,
     required UpdateAcademy updateAcademy,
     required DeleteAcademy deleteAcademy,
+    required BatchRepository batchRepository,
+    required CoachRepository coachRepository,
+    required AthleteRepository athleteRepository,
   }) : _createAcademy = createAcademy,
        _getAcademies = getAcademies,
        _getAcademy = getAcademy,
        _updateAcademy = updateAcademy,
-       _deleteAcademy = deleteAcademy;
+       _deleteAcademy = deleteAcademy,
+       _batchRepository = batchRepository,
+       _coachRepository = coachRepository,
+       _athleteRepository = athleteRepository;
 
   final CreateAcademy _createAcademy;
   final GetAcademies _getAcademies;
   final GetAcademy _getAcademy;
   final UpdateAcademy _updateAcademy;
   final DeleteAcademy _deleteAcademy;
+  final BatchRepository _batchRepository;
+  final CoachRepository _coachRepository;
+  final AthleteRepository _athleteRepository;
 
   AcademyStatus _status = AcademyStatus.initial;
   List<Academy> _academies = [];
@@ -143,6 +155,31 @@ class AcademyProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Delete child entities first to avoid foreign key violations.
+      // Order: batches → coaches → athletes, then the academy itself.
+      final batches = await _batchRepository.getBatches(academyId);
+      for (final batch in batches) {
+        try {
+          await _batchRepository.deleteBatch(academyId, batch.batchId);
+        } catch (_) {
+          // Best-effort: continue even if a single batch delete fails.
+        }
+      }
+
+      final coaches = await _coachRepository.getCoaches(academyId);
+      for (final coach in coaches) {
+        try {
+          await _coachRepository.deleteCoach(academyId, coach.coachId);
+        } catch (_) {}
+      }
+
+      final athletes = await _athleteRepository.getAthletes(academyId);
+      for (final athlete in athletes) {
+        try {
+          await _athleteRepository.deleteAthlete(academyId, athlete.athleteId);
+        } catch (_) {}
+      }
+
       await _deleteAcademy(academyId);
       _academies = _academies.where((a) => a.id != academyId).toList();
       _status = AcademyStatus.loaded;

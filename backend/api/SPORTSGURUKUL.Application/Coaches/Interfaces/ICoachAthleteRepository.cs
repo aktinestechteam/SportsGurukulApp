@@ -74,4 +74,12 @@ public interface ICoachAthleteRepository
         Guid athleteId,
         Guid academyId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loads every coach-athlete mapping for the given coach across all
+    /// academies, including the mapped athlete identity and academy.
+    /// </summary>
+    Task<List<CoachAthlete>> GetByCoachAsync(
+        Guid coachId,
+        CancellationToken cancellationToken = default);
 }

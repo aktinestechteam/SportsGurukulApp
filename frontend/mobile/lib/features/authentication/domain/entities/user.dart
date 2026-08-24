@@ -21,6 +21,12 @@ class User {
 
   String get fullName => '$firstName $lastName'.trim();
 
+  bool get isCoach =>
+      roles.any((r) => r == 'AcademyCoach' || r == 'Coach');
+
+  bool get isAthlete =>
+      roles.any((r) => r == 'AcademyAthlete' || r == 'Athlete');
+
   String get displayRole {
     final role = defaultRole.isNotEmpty
         ? defaultRole

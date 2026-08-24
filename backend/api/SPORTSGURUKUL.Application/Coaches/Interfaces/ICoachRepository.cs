@@ -89,4 +89,12 @@ public interface ICoachRepository
     /// Permanently removes the coach profile and all of its sport assignments.
     /// </summary>
     Task RemoveCoachAsync(Guid coachId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loads the coach profile for the given user identity including academy
+    /// associations, sport assignments and user identity.
+    /// </summary>
+    Task<Coach?> GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

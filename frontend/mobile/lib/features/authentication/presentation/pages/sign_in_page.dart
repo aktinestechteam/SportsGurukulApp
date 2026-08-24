@@ -68,6 +68,7 @@ class _SignInPageState extends State<SignInPage> {
                 AutofillHints.email,
               ],
               validator: validateEmail,
+              onChanged: (_) => auth.clearError(),
             ),
             const SizedBox(height: 12),
             PasswordField(
@@ -75,6 +76,7 @@ class _SignInPageState extends State<SignInPage> {
               validator: validateRequired,
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.password],
+              onChanged: (_) => auth.clearError(),
             ),
             const SizedBox(height: 4),
             Align(

@@ -4,6 +4,7 @@ using SPORTSGURUKUL.Application.Academies.Interfaces;
 using SPORTSGURUKUL.Application.Athletes.Commands;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Batches.Interfaces;
 using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common.Exceptions;
 using SPORTSGURUKUL.Application.Common.Interfaces;
@@ -24,6 +25,7 @@ public class DeleteAcademyAthleteCommandTests
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepository = new();
     private readonly Mock<IAthleteRepository> _athleteRepository = new();
     private readonly Mock<ICoachAthleteRepository> _coachAthleteRepository = new();
+    private readonly Mock<IBatchRepository> _batchRepository = new();
     private readonly Mock<ICurrentUserService> _currentUserService = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
 
@@ -134,6 +136,7 @@ public class DeleteAcademyAthleteCommandTests
             _refreshTokenRepository.Object,
             _athleteRepository.Object,
             _coachAthleteRepository.Object,
+            _batchRepository.Object,
             _currentUserService.Object,
             _unitOfWork.Object,
             NullLogger<DeleteAcademyAthleteCommandHandler>.Instance);

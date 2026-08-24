@@ -89,6 +89,58 @@ public class BatchRepository : IBatchRepository
             .Where(b => b.Id == batchId)
             .ExecuteDeleteAsync(cancellationToken);
 
+    public async Task RemoveCoachFromBatchesAsync(
+        Guid coachId,
+        Guid academyId,
+        CancellationToken cancellationToken = default)
+    {
+        var batchIds = await _context.Batches
+            .Where(b => b.AcademyId == academyId)
+            .Select(b => b.Id)
+            .ToListAsync(cancellationToken);
+
+        await _context.BatchCoaches
+            .Where(bc => batchIds.Contains(bc.BatchId) && bc.CoachId == coachId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task RemoveAthleteFromBatchesAsync(
+        Guid athleteId,
+        Guid academyId,
+        CancellationToken cancellationToken = default)
+    {
+        var batchIds = await _context.Batches
+            .Where(b => b.AcademyId == academyId)
+            .Select(b => b.Id)
+            .ToListAsync(cancellationToken);
+
+        await _context.BatchAthletes
+            .Where(ba => batchIds.Contains(ba.BatchId) && ba.AthleteId == athleteId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public Task<List<Batch>> GetByCoachAsync(
+        Guid coachId,
+        CancellationToken cancellationToken = default)
+        => _context.Batches
+            .AsNoTracking()
+            .Include(b => b.Academy)
+            .Include(b => b.Sport)
+            .Include(b => b.Slots)
+            .Include(b => b.CoachAssociations)
+                .ThenInclude(bc => bc.Coach)
+                    .ThenInclude(c => c.User)
+            .Include(b => b.AthleteAssociations)
+                .ThenInclude(ba => ba.Athlete)
+                    .ThenInclude(a => a.User)
+            .Include(b => b.AthleteAssociations)
+                .ThenInclude(ba => ba.Athlete)
+                    .ThenInclude(a => a.Sports)
+                        .ThenInclude(s => s.Sport)
+            .Where(b => b.CoachAssociations.Any(bc => bc.CoachId == coachId))
+            .OrderByDescending(b => b.CreatedAt)
+            .ToListAsync(cancellationToken);
+
     public void Detach(Batch batch)
     {
         var entry = _context.Entry(batch);

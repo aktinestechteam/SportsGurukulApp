@@ -11,6 +11,7 @@ class PasswordField extends StatelessWidget {
     this.validator,
     this.textInputAction,
     this.autofillHints,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -18,6 +19,7 @@ class PasswordField extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,7 @@ class PasswordField extends StatelessWidget {
       validator: validator,
       textInputAction: textInputAction,
       autofillHints: autofillHints,
+      onChanged: onChanged,
     );
   }
 }
