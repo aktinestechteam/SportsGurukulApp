@@ -5,6 +5,14 @@ namespace SPORTSGURUKUL.Application.Athletes.Interfaces;
 public interface IAthleteRepository
 {
     /// <summary>
+    /// Loads the athlete profile for the given user identity including the
+    /// user, academy associations and sport assignments.
+    /// </summary>
+    Task<Athlete?> GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Loads the academy athlete associations for the given academy including
     /// the athlete profile, user identity, branch and sport assignments.
     /// </summary>

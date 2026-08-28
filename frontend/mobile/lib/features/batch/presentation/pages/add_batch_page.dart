@@ -1079,10 +1079,12 @@ class _CoachTile extends StatelessWidget {
                 ),
               ),
               if (coach.sports.isNotEmpty)
-                AppBadge(
-                  label: coach.sports.first.name,
-                  icon: Icons.emoji_events_outlined,
-                  compact: true,
+                Flexible(
+                  child: AppBadge(
+                    label: coach.sports.first.name,
+                    icon: Icons.emoji_events_outlined,
+                    compact: true,
+                  ),
                 ),
             ],
           ),
@@ -1177,9 +1179,11 @@ class _AthleteTile extends StatelessWidget {
                 ),
               ),
               if (athlete.ageGroup != null)
-                AppBadge(
-                  label: athlete.ageGroup!,
-                  compact: true,
+                Flexible(
+                  child: AppBadge(
+                    label: athlete.ageGroup!,
+                    compact: true,
+                  ),
                 ),
             ],
           ),

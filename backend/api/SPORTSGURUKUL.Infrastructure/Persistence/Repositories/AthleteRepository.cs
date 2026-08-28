@@ -13,6 +13,18 @@ public class AthleteRepository : IAthleteRepository
         _context = context;
     }
 
+    public Task<Athlete?> GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+        => _context.Athletes
+            .AsNoTracking()
+            .Include(a => a.User)
+            .Include(a => a.AcademyAssociations)
+                .ThenInclude(aa => aa.Academy)
+            .Include(a => a.Sports)
+                .ThenInclude(aa => aa.Sport)
+            .FirstOrDefaultAsync(a => a.UserId == userId, cancellationToken);
+
     public Task<List<AcademyAthlete>> GetByAcademyAsync(
         Guid academyId,
         CancellationToken cancellationToken = default)

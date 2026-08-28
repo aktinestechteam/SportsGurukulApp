@@ -871,9 +871,11 @@ class _AthleteTile extends StatelessWidget {
               ),
             ),
             if (athlete.batchName != null)
-              AppBadge(
-                label: athlete.batchName!,
-                compact: true,
+              Flexible(
+                child: AppBadge(
+                  label: athlete.batchName!,
+                  compact: true,
+                ),
               ),
             const SizedBox(width: AppSpacing.xs),
             Icon(

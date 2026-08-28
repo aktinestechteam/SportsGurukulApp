@@ -141,6 +141,21 @@ public class BatchRepository : IBatchRepository
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync(cancellationToken);
 
+    public Task<List<Batch>> GetByAthleteAsync(
+        Guid athleteId,
+        CancellationToken cancellationToken = default)
+        => _context.Batches
+            .AsNoTracking()
+            .Include(b => b.Academy)
+            .Include(b => b.Sport)
+            .Include(b => b.Slots)
+            .Include(b => b.CoachAssociations)
+                .ThenInclude(bc => bc.Coach)
+                    .ThenInclude(c => c.User)
+            .Where(b => b.AthleteAssociations.Any(ba => ba.AthleteId == athleteId))
+            .OrderByDescending(b => b.CreatedAt)
+            .ToListAsync(cancellationToken);
+
     public void Detach(Batch batch)
     {
         var entry = _context.Entry(batch);

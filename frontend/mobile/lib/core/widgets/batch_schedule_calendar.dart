@@ -806,15 +806,60 @@ class _ScheduleCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: Text(
-                    batch.batchName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AuthPalette.textPrimary(context),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        batch.batchName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AuthPalette.textPrimary(context),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (batch.coachName != null && batch.coachName!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AuthPalette.red.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'COACH',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.6,
+                                    color: AuthPalette.red,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  batch.coachName!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AuthPalette.subtitle(context),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xxs),
@@ -832,14 +877,6 @@ class _ScheduleCard extends StatelessWidget {
                 child: _InfoRow(
                   icon: Icons.sports_outlined,
                   text: batch.sportName!,
-                ),
-              ),
-            if (batch.coachName != null && batch.coachName!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: _InfoRow(
-                  icon: Icons.person_outline,
-                  text: batch.coachName!,
                 ),
               ),
             if (batch.athletesCount > 0)

@@ -272,14 +272,18 @@ class _BatchCard extends StatelessWidget {
                 children: [
                   Icon(Icons.date_range_outlined, size: 16, color: scheme.primary),
                   const SizedBox(width: 8),
-                  Text(
-                    batch.startDate != null && batch.endDate != null
-                        ? '${batch.startDate!.day}/${batch.startDate!.month}/${batch.startDate!.year} – ${batch.endDate!.day}/${batch.endDate!.month}/${batch.endDate!.year}'
-                        : batch.startDate != null
-                            ? 'From ${batch.startDate!.day}/${batch.startDate!.month}/${batch.startDate!.year}'
-                            : 'Until ${batch.endDate!.day}/${batch.endDate!.month}/${batch.endDate!.year}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      batch.startDate != null && batch.endDate != null
+                          ? '${batch.startDate!.day}/${batch.startDate!.month}/${batch.startDate!.year} – ${batch.endDate!.day}/${batch.endDate!.month}/${batch.endDate!.year}'
+                          : batch.startDate != null
+                              ? 'From ${batch.startDate!.day}/${batch.startDate!.month}/${batch.startDate!.year}'
+                              : 'Until ${batch.endDate!.day}/${batch.endDate!.month}/${batch.endDate!.year}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -313,18 +317,22 @@ class _BatchCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  AppBadge(
-                    label:
-                        '${TimeFormat.clock(slot.startTime)} – ${TimeFormat.clock(slot.endTime)}',
-                    icon: Icons.access_time,
-                    compact: true,
+                  Flexible(
+                    child: AppBadge(
+                      label:
+                          '${TimeFormat.clock(slot.startTime)} – ${TimeFormat.clock(slot.endTime)}',
+                      icon: Icons.access_time,
+                      compact: true,
+                    ),
                   ),
                   if (slot.location != null && slot.location!.isNotEmpty) ...[
                     const SizedBox(width: 8),
-                    AppBadge(
-                      label: slot.location!,
-                      icon: Icons.location_on_outlined,
-                      compact: true,
+                    Flexible(
+                      child: AppBadge(
+                        label: slot.location!,
+                        icon: Icons.location_on_outlined,
+                        compact: true,
+                      ),
                     ),
                   ],
                 ],
@@ -376,9 +384,11 @@ class _BatchCard extends StatelessWidget {
                     ),
                   ),
                   if (coach.specialization != null && coach.specialization!.isNotEmpty)
-                    AppBadge(
-                      label: coach.specialization!,
-                      compact: true,
+                    Flexible(
+                      child: AppBadge(
+                        label: coach.specialization!,
+                        compact: true,
+                      ),
                     ),
                 ],
               ),
@@ -429,10 +439,12 @@ class _BatchCard extends StatelessWidget {
                     ),
                   ),
                   if (athlete.primarySport != null && athlete.primarySport!.isNotEmpty)
-                    AppBadge(
-                      label: athlete.primarySport!,
-                      icon: Icons.emoji_events_outlined,
-                      compact: true,
+                    Flexible(
+                      child: AppBadge(
+                        label: athlete.primarySport!,
+                        icon: Icons.emoji_events_outlined,
+                        compact: true,
+                      ),
                     ),
                 ],
               ),

@@ -32,6 +32,7 @@ class _SportsGurukulAppState extends State<SportsGurukulApp> {
         ChangeNotifierProvider.value(value: Dependencies.coachProvider),
         ChangeNotifierProvider.value(value: Dependencies.coachProfileProvider),
         ChangeNotifierProvider.value(value: Dependencies.athleteProvider),
+        ChangeNotifierProvider.value(value: Dependencies.athleteProfileProvider),
         ChangeNotifierProvider.value(value: Dependencies.batchProvider),
         ChangeNotifierProvider(create: (_) => ThemeController()),
       ],

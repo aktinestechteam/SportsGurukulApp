@@ -156,11 +156,13 @@ class _SectionHeader extends StatelessWidget {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [label, ?subtitleCol],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [label, ?subtitleCol],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: AppSpacing.md),
           trailing!,
         ],
       );

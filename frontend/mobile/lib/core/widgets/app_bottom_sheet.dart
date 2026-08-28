@@ -8,6 +8,9 @@ class AppBottomSheet {
   AppBottomSheet._();
 
   /// Shows a modal bottom sheet built by [builder].
+  ///
+  /// The built content is wrapped in a vertical scroll view so that content
+  /// taller than the sheet's allowed height scrolls instead of overflowing.
   static Future<T?> show<T>(
     BuildContext context, {
     required WidgetBuilder builder,
@@ -16,7 +19,16 @@ class AppBottomSheet {
   }) {
     return showModalBottomSheet<T>(
       context: context,
-      builder: builder,
+      builder: (context) {
+        // Keep the content above the on-screen keyboard when resizing, then
+        // let it scroll if it exceeds the sheet's height budget.
+        return SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: builder(context),
+        );
+      },
       isScrollControlled: isScrollControlled,
       showDragHandle: showDragHandle,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,

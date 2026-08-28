@@ -43,6 +43,15 @@ public interface IBatchRepository
         Guid coachId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns every batch the athlete is assigned to across all academies,
+    /// including slots, coach peers and the academy/sport. Athlete associations
+    /// are intentionally not surfaced to the athlete themselves.
+    /// </summary>
+    Task<List<Batch>> GetByAthleteAsync(
+        Guid athleteId,
+        CancellationToken cancellationToken = default);
+
     void Detach(Batch batch);
 
     void ClearTracker();

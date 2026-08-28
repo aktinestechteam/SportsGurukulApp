@@ -11,13 +11,18 @@ import '../features/academy/domain/usecases/get_academies.dart';
 import '../features/academy/domain/usecases/get_academy.dart';
 import '../features/academy/domain/usecases/update_academy.dart';
 import '../features/academy/presentation/providers/academy_provider.dart';
+import '../features/athlete/data/datasources/athlete_profile_remote_data_source.dart';
 import '../features/athlete/data/datasources/athlete_remote_data_source.dart';
+import '../features/athlete/data/repositories/athlete_profile_repository_impl.dart';
 import '../features/athlete/data/repositories/athlete_repository_impl.dart';
+import '../features/athlete/domain/repositories/athlete_profile_repository.dart';
 import '../features/athlete/domain/repositories/athlete_repository.dart';
 import '../features/athlete/domain/usecases/create_athlete.dart';
 import '../features/athlete/domain/usecases/delete_athlete.dart';
+import '../features/athlete/domain/usecases/get_athlete_profile.dart';
 import '../features/athlete/domain/usecases/get_athletes.dart';
 import '../features/athlete/domain/usecases/update_athlete.dart';
+import '../features/athlete/presentation/providers/athlete_profile_provider.dart';
 import '../features/athlete/presentation/providers/athlete_provider.dart';
 import '../features/authentication/data/datasources/auth_remote_data_source.dart';
 import '../features/authentication/data/repositories/auth_repository_impl.dart';
@@ -65,6 +70,7 @@ class Dependencies {
   static late final CoachProvider coachProvider;
   static late final CoachProfileProvider coachProfileProvider;
   static late final AthleteProvider athleteProvider;
+  static late final AthleteProfileProvider athleteProfileProvider;
   static late final BatchProvider batchProvider;
 
   static void initialize() {
@@ -144,6 +150,14 @@ class Dependencies {
       getAthletes: GetAthletes(athleteRepository),
       updateAthlete: UpdateAthlete(athleteRepository),
       deleteAthlete: DeleteAthlete(athleteRepository),
+    );
+
+    final athleteProfileDataSource = AthleteProfileRemoteDataSource(apiClient: apiClient);
+    final AthleteProfileRepository athleteProfileRepository = AthleteProfileRepositoryImpl(
+      dataSource: athleteProfileDataSource,
+    );
+    athleteProfileProvider = AthleteProfileProvider(
+      getAthleteProfile: GetAthleteProfile(athleteProfileRepository),
     );
 
     batchProvider = BatchProvider(
