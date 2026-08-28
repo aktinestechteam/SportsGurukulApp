@@ -1,3 +1,6 @@
+import '../../../../core/utils/app_dates.dart';
+import '../../../../core/utils/time_format.dart';
+
 class CoachAcademyInfo {
   const CoachAcademyInfo({
     required this.academyId,
@@ -52,6 +55,8 @@ class CoachBatchInfo {
     this.athletesCount = 0,
     this.coaches = const [],
     this.athletes = const [],
+    this.startDate,
+    this.endDate,
   });
 
   final String batchId;
@@ -64,6 +69,8 @@ class CoachBatchInfo {
   final int athletesCount;
   final List<CoachBatchPeer> coaches;
   final List<CoachBatchAthleteInfo> athletes;
+  final DateTime? startDate;
+  final DateTime? endDate;
 
   factory CoachBatchInfo.fromJson(Map<String, dynamic> json) {
     return CoachBatchInfo(
@@ -83,6 +90,8 @@ class CoachBatchInfo {
       athletes: (json['athletes'] as List? ?? const [])
           .map((e) => CoachBatchAthleteInfo.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
+      startDate: AppDates.parseIsoDate(json['startDate'] as String?),
+      endDate: AppDates.parseIsoDate(json['endDate'] as String?),
     );
   }
 }
@@ -114,30 +123,23 @@ class CoachBatchAthleteInfo {
 
 class CoachBatchSlot {
   const CoachBatchSlot({
-    required this.dayOfWeek,
     required this.startTime,
     required this.endTime,
     this.location,
   });
 
-  final int dayOfWeek;
   final String startTime;
   final String endTime;
   final String? location;
 
-  String get dayLabel {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return (dayOfWeek >= 0 && dayOfWeek < 7) ? days[dayOfWeek] : '';
-  }
-
   String get display {
     final loc = location;
-    return '$dayLabel $startTime – $endTime${loc != null ? ' · $loc' : ''}';
+    return '${TimeFormat.clock(startTime)} – ${TimeFormat.clock(endTime)}'
+        '${loc != null ? ' · $loc' : ''}';
   }
 
   factory CoachBatchSlot.fromJson(Map<String, dynamic> json) {
     return CoachBatchSlot(
-      dayOfWeek: json['dayOfWeek'] as int? ?? 0,
       startTime: json['startTime'] as String? ?? '',
       endTime: json['endTime'] as String? ?? '',
       location: json['location'] as String?,

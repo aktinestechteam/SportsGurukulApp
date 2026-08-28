@@ -1,36 +1,14 @@
-enum DayOfWeek {
-  sunday(0, 'Sunday'),
-  monday(1, 'Monday'),
-  tuesday(2, 'Tuesday'),
-  wednesday(3, 'Wednesday'),
-  thursday(4, 'Thursday'),
-  friday(5, 'Friday'),
-  saturday(6, 'Saturday');
-
-  const DayOfWeek(this.value, this.label);
-
-  final int value;
-  final String label;
-
-  static DayOfWeek fromValue(int? value) {
-    return DayOfWeek.values.firstWhere(
-      (d) => d.value == value,
-      orElse: () => DayOfWeek.monday,
-    );
-  }
-}
+import '../../../../core/utils/app_dates.dart';
 
 class BatchScheduleSlot {
   const BatchScheduleSlot({
     required this.slotId,
-    required this.dayOfWeek,
     required this.startTime,
     required this.endTime,
     this.location,
   });
 
   final String slotId;
-  final DayOfWeek dayOfWeek;
   final String startTime;
   final String endTime;
   final String? location;
@@ -38,7 +16,6 @@ class BatchScheduleSlot {
   factory BatchScheduleSlot.fromJson(Map<String, dynamic> json) {
     return BatchScheduleSlot(
       slotId: json['slotId'] as String? ?? '',
-      dayOfWeek: DayOfWeek.fromValue(json['dayOfWeek'] as int?),
       startTime: json['startTime'] as String? ?? '',
       endTime: json['endTime'] as String? ?? '',
       location: json['location'] as String?,
@@ -47,7 +24,6 @@ class BatchScheduleSlot {
 
   Map<String, dynamic> toJson() => {
     'slotId': slotId,
-    'dayOfWeek': dayOfWeek.value,
     'startTime': startTime,
     'endTime': endTime,
     'location': location,
@@ -165,8 +141,8 @@ class Batch {
       description: json['description'] as String?,
       sportId: json['sportId'] as String?,
       sportName: json['sportName'] as String?,
-      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) : null,
-      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) : null,
+      startDate: AppDates.parseIsoDate(json['startDate'] as String?),
+      endDate: AppDates.parseIsoDate(json['endDate'] as String?),
       createdAt: json['createdAt'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? '',
       slots: (json['slots'] as List? ?? const [])
@@ -188,8 +164,8 @@ class Batch {
     'description': description,
     'sportId': sportId,
     'sportName': sportName,
-    'startDate': startDate?.toIso8601String(),
-    'endDate': endDate?.toIso8601String(),
+    'startDate': startDate != null ? AppDates.toIsoDate(startDate!) : null,
+    'endDate': endDate != null ? AppDates.toIsoDate(endDate!) : null,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
     'slots': slots.map((e) => e.toJson()).toList(),

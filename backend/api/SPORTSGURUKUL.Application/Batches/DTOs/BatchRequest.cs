@@ -16,7 +16,6 @@ public sealed class BatchRequest
 
 public sealed class BatchScheduleSlotRequest
 {
-    public DayOfWeek DayOfWeek { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public string? Location { get; set; }

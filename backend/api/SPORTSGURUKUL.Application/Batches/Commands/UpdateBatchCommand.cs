@@ -157,8 +157,8 @@ public sealed class UpdateBatchCommandHandler
             {
                 var slotId = Guid.NewGuid();
                 await _unitOfWork.ExecuteSqlRawAsync(
-                    "INSERT INTO \"BatchScheduleSlots\" (\"Id\", \"BatchId\", \"DayOfWeek\", \"StartTime\", \"EndTime\", \"Location\", \"CreatedAt\") VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})",
-                    new object[] { slotId, batchId, (int)slot.DayOfWeek, slot.StartTime, slot.EndTime, slot.Location?.Trim(), now }, cancellationToken);
+                    "INSERT INTO \"BatchScheduleSlots\" (\"Id\", \"BatchId\", \"StartTime\", \"EndTime\", \"Location\", \"CreatedAt\") VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
+                    new object[] { slotId, batchId, slot.StartTime, slot.EndTime, slot.Location?.Trim(), now }, cancellationToken);
             }
 
             foreach (var coachId in request.CoachIds.Distinct())

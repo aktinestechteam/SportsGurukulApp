@@ -7,7 +7,9 @@ import '../../../../core/theme/app_breakpoints.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/auth_palette.dart';
+import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/app_shell.dart';
+import '../../../../core/widgets/batch_schedule_calendar.dart';
 import '../../../authentication/domain/entities/user.dart';
 import '../../../authentication/presentation/providers/auth_provider.dart';
 
@@ -86,6 +88,16 @@ class _AthleteDashboardView extends StatelessWidget {
                       onChangePassword: () => context.push('/change-password'),
                       onLogout: () => context.read<AuthProvider>().signOut(),
                     ),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    AppSectionHeader(
+                      title: 'My Schedule',
+                      subtitle: 'Your training sessions',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    BatchScheduleCalendar(
+                        slots: const [],
+                        role: UserRole.athlete,
+                      ),
                     const SizedBox(height: AppSpacing.xxl),
                   ],
                 ),

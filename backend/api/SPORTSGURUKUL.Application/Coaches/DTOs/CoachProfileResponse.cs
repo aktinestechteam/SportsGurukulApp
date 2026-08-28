@@ -31,6 +31,8 @@ public sealed class CoachProfileBatch
     public string AcademyId { get; set; } = string.Empty;
     public string AcademyName { get; set; } = string.Empty;
     public string? SportName { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
     public bool AllowCoachBatchEdit { get; set; }
     public int AthletesCount { get; set; }
     public List<CoachProfileBatchSlot> Slots { get; set; } = [];
@@ -48,7 +50,6 @@ public sealed class CoachProfileBatchAthlete
 
 public sealed class CoachProfileBatchSlot
 {
-    public int DayOfWeek { get; set; }
     public string StartTime { get; set; } = string.Empty;
     public string EndTime { get; set; } = string.Empty;
     public string? Location { get; set; }

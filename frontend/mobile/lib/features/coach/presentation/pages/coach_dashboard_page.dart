@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/app_shell.dart';
+import '../../../../core/widgets/batch_schedule_calendar.dart';
 import '../../../authentication/domain/entities/user.dart';
 import '../../../authentication/presentation/providers/auth_provider.dart';
 import '../../domain/entities/coach_profile.dart';
@@ -128,8 +129,39 @@ class _LoadedDashboard extends StatelessWidget {
   final CoachProfile profile;
   final User? user;
 
+  static List<CalendarScheduleSlot> _buildCalendarSlots(
+    List<CoachBatchInfo> batches,
+  ) {
+    final slots = <CalendarScheduleSlot>[];
+    for (final batch in batches) {
+      for (final slot in batch.slots) {
+        slots.add(CalendarScheduleSlot(
+          batchId: batch.batchId,
+          batchName: batch.name,
+          sportName: batch.sportName,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          location: slot.location,
+          athletesCount: batch.athletesCount,
+          coachName: batch.coaches
+              .map((c) => c.fullName)
+              .where((n) => n.isNotEmpty)
+              .join(', '),
+          startDate: batch.startDate,
+          endDate: batch.endDate,
+        ));
+      }
+    }
+    return slots;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final totalSessions = profile.batches.fold<int>(
+      0,
+      (sum, b) => sum + b.slots.length,
+    );
+
     return SingleChildScrollView(
       padding: AppBreakpoints.horizontalPadding(context).add(
         const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
@@ -139,6 +171,12 @@ class _LoadedDashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _ProfileHeader(profile: profile, user: user),
+            const SizedBox(height: AppSpacing.xl),
+            _QuickStats(
+              batches: profile.batches.length,
+              athletes: profile.athletes.length,
+              sessions: totalSessions,
+            ),
             const SizedBox(height: AppSpacing.xxxl),
             if (profile.academies.isNotEmpty) ...[
               AppSectionHeader(
@@ -176,12 +214,27 @@ class _LoadedDashboard extends StatelessWidget {
               ],
               const SizedBox(height: AppSpacing.xxxl),
             ],
-            const AppSectionHeader(
-              title: 'My Weekly Schedule',
+            AppSectionHeader(
+              title: 'My Schedule',
               subtitle: 'Sessions across all your batches',
             ),
             const SizedBox(height: AppSpacing.md),
-            _WeeklySchedule(batches: profile.batches),
+            // Responsive height: enough room for the month calendar + a few
+            // timeline sessions without dominating the page on smaller screens.
+            BatchScheduleCalendar(
+              slots: _buildCalendarSlots(profile.batches),
+              role: UserRole.coach,
+              onSessionTap: (slot) {
+                final batch = profile.batches.firstWhere(
+                  (b) => b.batchId == slot.batchId,
+                  orElse: () => profile.batches.first,
+                );
+                AppBottomSheet.show(
+                  context,
+                  builder: (_) => _BatchDetailsSheet(batch: batch),
+                );
+              },
+            ),
             const SizedBox(height: AppSpacing.xxl),
           ],
         ),
@@ -193,6 +246,100 @@ class _LoadedDashboard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
+
+class _QuickStats extends StatelessWidget {
+  const _QuickStats({
+    required this.batches,
+    required this.athletes,
+    required this.sessions,
+  });
+
+  final int batches;
+  final int athletes;
+  final int sessions;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatTile(
+            icon: Icons.group_outlined,
+            label: 'Batches',
+            value: '$batches',
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _StatTile(
+            icon: Icons.people_outline,
+            label: 'Athletes',
+            value: '$athletes',
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _StatTile(
+            icon: Icons.event_outlined,
+            label: 'Sessions',
+            value: '$sessions',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: AuthPalette.surface(context),
+        borderRadius: AppRadii.brMedium,
+        border: Border.all(color: AuthPalette.border(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AuthPalette.red),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: AuthPalette.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AuthPalette.muted(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.profile, this.user});
@@ -385,141 +532,280 @@ class _BatchCard extends StatelessWidget {
 
   final CoachBatchInfo batch;
 
+  void _openDetails(BuildContext context) {
+    AppBottomSheet.show(
+      context,
+      builder: (_) => _BatchDetailsSheet(batch: batch),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AuthPalette.surface(context),
-        borderRadius: AppRadii.brMedium,
-        border: Border.all(color: AuthPalette.border(context)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.group_outlined, size: 20, color: AuthPalette.red),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      batch.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AuthPalette.textPrimary(context),
-                      ),
-                    ),
-                    if (batch.academyName.isNotEmpty)
+    return GestureDetector(
+      onTap: () => _openDetails(context),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AuthPalette.surface(context),
+          borderRadius: AppRadii.brMedium,
+          border: Border.all(color: AuthPalette.border(context)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.group_outlined, size: 20, color: AuthPalette.red),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        batch.academyName,
+                        batch.name,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: AuthPalette.subtitle(context),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (batch.allowCoachBatchEdit)
-                IconButton(
-                  tooltip: 'Edit Batch',
-                  onPressed: () {
-                    context.push(
-                      '/academies/${batch.academyId}/batches/${batch.batchId}/edit',
-                      extra: batch,
-                    );
-                  },
-                  icon: Icon(
-                    Icons.edit_outlined,
-                    size: 18,
-                    color: AuthPalette.red,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              if (batch.sportName != null)
-                AppBadge(
-                  label: batch.sportName!,
-                  icon: Icons.sports_outlined,
-                  compact: true,
-                ),
-              AppBadge(
-                label: '${batch.athletesCount} ${batch.athletesCount == 1 ? 'athlete' : 'athletes'}',
-                icon: Icons.people_outline,
-                compact: true,
-              ),
-            ],
-          ),
-          if (batch.slots.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Schedule',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.6,
-                color: AuthPalette.muted(context),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            for (final slot in batch.slots)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.schedule, size: 14, color: AuthPalette.muted(context)),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        slot.display,
-                        style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
                           color: AuthPalette.textPrimary(context),
                         ),
                       ),
-                    ),
-                  ],
+                      if (batch.academyName.isNotEmpty)
+                        Text(
+                          batch.academyName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AuthPalette.subtitle(context),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
-          if (batch.coaches.length > 1) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Other Coaches',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.6,
-                color: AuthPalette.muted(context),
-              ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: AuthPalette.muted(context),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
               children: [
-                for (final peer in batch.coaches)
+                if (batch.sportName != null)
                   AppBadge(
-                    label: peer.fullName,
+                    label: batch.sportName!,
+                    icon: Icons.sports_outlined,
+                    compact: true,
+                  ),
+                AppBadge(
+                  label: '${batch.athletesCount} ${batch.athletesCount == 1 ? 'athlete' : 'athletes'}',
+                  icon: Icons.people_outline,
+                  compact: true,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Batch details bottom sheet
+// ---------------------------------------------------------------------------
+
+class _BatchDetailsSheet extends StatelessWidget {
+  const _BatchDetailsSheet({required this.batch});
+
+  final CoachBatchInfo batch;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AuthPalette.red,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        batch.name,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AuthPalette.textPrimary(context),
+                        ),
+                      ),
+                      if (batch.academyName.isNotEmpty)
+                        Text(
+                          batch.academyName,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AuthPalette.subtitle(context),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                if (batch.sportName != null)
+                  AppBadge(
+                    label: batch.sportName!,
+                    icon: Icons.sports_outlined,
+                    compact: true,
+                  ),
+                AppBadge(
+                  label: '${batch.athletesCount} athletes',
+                  icon: Icons.people_outline,
+                  compact: true,
+                ),
+                if (batch.coaches.isNotEmpty)
+                  AppBadge(
+                    label: '${batch.coaches.length} ${batch.coaches.length == 1 ? 'coach' : 'coaches'}',
                     icon: Icons.person_outline,
                     compact: true,
                   ),
               ],
             ),
+            if (batch.slots.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              Divider(height: 1, color: AuthPalette.border(context)),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'SCHEDULE',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.6,
+                  color: AuthPalette.muted(context),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              for (final slot in batch.slots)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.schedule, size: 14, color: AuthPalette.muted(context)),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          slot.display,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AuthPalette.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+            if (batch.athletes.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              Divider(height: 1, color: AuthPalette.border(context)),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'ATHLETES (${batch.athletes.length})',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.6,
+                  color: AuthPalette.muted(context),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: batch.athletes.length,
+                  itemBuilder: (context, index) {
+                    final athlete = batch.athletes[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: AuthPalette.red.withValues(alpha: 0.1),
+                            child: Text(
+                              _initials(athlete.fullName),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AuthPalette.red,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  athlete.fullName,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AuthPalette.textPrimary(context),
+                                  ),
+                                ),
+                                if (athlete.sport != null && athlete.sport!.isNotEmpty)
+                                  Text(
+                                    athlete.sport!,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AuthPalette.subtitle(context),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
+}
+
+String _initials(String fullName) {
+  final parts = fullName.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+  if (parts.isEmpty) return '?';
+  if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
 }
 
 // ---------------------------------------------------------------------------
@@ -716,466 +1002,4 @@ class _DetailRow extends StatelessWidget {
       ),
     );
   }
-}
-
-// ---------------------------------------------------------------------------
-// Section 4 — My Weekly Schedule
-// ---------------------------------------------------------------------------
-
-class _WeeklySchedule extends StatelessWidget {
-  const _WeeklySchedule({required this.batches});
-
-  final List<CoachBatchInfo> batches;
-
-  @override
-  Widget build(BuildContext context) {
-    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const dayValues = [1, 2, 3, 4, 5, 6, 0];
-    const dayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-    final now = DateTime.now();
-    final todayDow = now.weekday % 7;
-
-    final sessionsByDay = <int, List<_ScheduleSession>>{};
-    for (var i = 0; i < 7; i++) {
-      sessionsByDay[dayValues[i]] = [];
-    }
-    for (final batch in batches) {
-      for (final slot in batch.slots) {
-        sessionsByDay[slot.dayOfWeek]?.add(_ScheduleSession(
-          batch: batch,
-          slot: slot,
-        ));
-      }
-    }
-
-    return Column(
-      children: [
-        for (var dayIndex = 0; dayIndex < 7; dayIndex++) ...[
-          if (dayIndex > 0) const SizedBox(height: AppSpacing.sm),
-          _DayScheduleSection(
-            dayName: dayNames[dayIndex],
-            dayShort: dayShort[dayIndex],
-            sessions: sessionsByDay[dayValues[dayIndex]] ?? [],
-            isToday: dayValues[dayIndex] == todayDow,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _ScheduleSession {
-  const _ScheduleSession({required this.batch, required this.slot});
-
-  final CoachBatchInfo batch;
-  final CoachBatchSlot slot;
-}
-
-class _DayScheduleSection extends StatefulWidget {
-  const _DayScheduleSection({
-    required this.dayName,
-    required this.dayShort,
-    required this.sessions,
-    required this.isToday,
-  });
-
-  final String dayName;
-  final String dayShort;
-  final List<_ScheduleSession> sessions;
-  final bool isToday;
-
-  @override
-  State<_DayScheduleSection> createState() => _DayScheduleSectionState();
-}
-
-class _DayScheduleSectionState extends State<_DayScheduleSection> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AuthPalette.surface(context),
-        borderRadius: AppRadii.brMedium,
-        border: Border.all(
-          color: widget.isToday ? AuthPalette.red : AuthPalette.border(context),
-          width: widget.isToday ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: widget.isToday
-                  ? AuthPalette.red.withValues(alpha: 0.06)
-                  : AuthPalette.bg(context),
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppRadii.medium),
-              ),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  widget.dayShort.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.5,
-                    color: widget.isToday ? AuthPalette.red : AuthPalette.muted(context),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  widget.dayName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AuthPalette.textPrimary(context),
-                  ),
-                ),
-                const Spacer(),
-                if (widget.sessions.isNotEmpty)
-                  AppBadge(
-                    label: '${widget.sessions.length} ${widget.sessions.length == 1 ? 'session' : 'sessions'}',
-                    compact: true,
-                  )
-                else
-                  Text(
-                    'No sessions',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: AuthPalette.muted(context),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (widget.sessions.isNotEmpty)
-            Divider(height: 1, thickness: 1, color: AuthPalette.border(context)),
-          if (widget.sessions.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.lg,
-              ),
-              child: Text(
-                'Rest day',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                  color: AuthPalette.muted(context),
-                ),
-              ),
-            )
-          else
-            for (var i = 0; i < widget.sessions.length; i++) ...[
-              if (i > 0)
-                Divider(height: 1, thickness: 0.5, color: AuthPalette.border(context)),
-              _ExpandableSessionCard(session: widget.sessions[i]),
-            ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpandableSessionCard extends StatefulWidget {
-  const _ExpandableSessionCard({required this.session});
-
-  final _ScheduleSession session;
-
-  @override
-  State<_ExpandableSessionCard> createState() => _ExpandableSessionCardState();
-}
-
-class _ExpandableSessionCardState extends State<_ExpandableSessionCard> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final slot = widget.session.slot;
-    final batch = widget.session.batch;
-
-    return Column(
-      children: [
-        InkWell(
-          onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AuthPalette.red,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            batch.name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AuthPalette.textPrimary(context),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${slot.startTime} – ${slot.endTime}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AuthPalette.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    _AthleteCountChip(count: batch.athletesCount),
-                    const SizedBox(width: AppSpacing.sm),
-                    AnimatedRotation(
-                      turns: _expanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        Icons.expand_more,
-                        size: 20,
-                        color: AuthPalette.muted(context),
-                      ),
-                    ),
-                  ],
-                ),
-                if (slot.location != null && slot.location!.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16),
-                    child: Row(
-                      children: [
-                        Icon(Icons.location_on_outlined, size: 14, color: AuthPalette.muted(context)),
-                        const SizedBox(width: 4),
-                        Text(
-                          slot.location!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AuthPalette.subtitle(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.xs),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      if (batch.sportName != null)
-                        AppBadge(
-                          label: batch.sportName!,
-                          icon: Icons.sports_outlined,
-                          compact: true,
-                        ),
-                      if (batch.coaches.length > 1)
-                        AppBadge(
-                          label: '${batch.coaches.length} coaches',
-                          icon: Icons.group_outlined,
-                          compact: true,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: _ExpandedAthleteList(
-            batch: batch,
-          ),
-          crossFadeState: _expanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 200),
-        ),
-      ],
-    );
-  }
-}
-
-class _AthleteCountChip extends StatelessWidget {
-  const _AthleteCountChip({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AuthPalette.red.withValues(alpha: 0.08),
-        borderRadius: AppRadii.brPill,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.people_outline, size: 13, color: AuthPalette.red),
-          const SizedBox(width: 4),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AuthPalette.red,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpandedAthleteList extends StatelessWidget {
-  const _ExpandedAthleteList({required this.batch});
-
-  final CoachBatchInfo batch;
-
-  @override
-  Widget build(BuildContext context) {
-    final athletes = batch.athletes;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        AppSpacing.md,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Divider(height: 1, thickness: 0.5, color: AuthPalette.border(context)),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'ATHLETES IN THIS BATCH',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.5,
-              color: AuthPalette.muted(context),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          if (athletes.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Text(
-                'No athletes assigned to this batch yet.',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                  color: AuthPalette.muted(context),
-                ),
-              ),
-            )
-          else
-            for (final athlete in athletes)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: AuthPalette.red.withValues(alpha: 0.1),
-                      child: Text(
-                        _initialsStatic(athlete.fullName),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AuthPalette.red,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            athlete.fullName,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AuthPalette.textPrimary(context),
-                            ),
-                          ),
-                          if (athlete.sport != null && athlete.sport!.isNotEmpty)
-                            Text(
-                              athlete.sport!,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AuthPalette.subtitle(context),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          if (batch.coaches.length > 1) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'CO-COACHES',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.5,
-                color: AuthPalette.muted(context),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: [
-                for (final coach in batch.coaches)
-                  AppBadge(
-                    label: coach.fullName,
-                    icon: Icons.person_outline,
-                    compact: true,
-                  ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-String _initialsStatic(String fullName) {
-  final parts = fullName.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
-  if (parts.isEmpty) return '?';
-  if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
 }

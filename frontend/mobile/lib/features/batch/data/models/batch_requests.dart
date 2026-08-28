@@ -1,3 +1,4 @@
+import '../../../../core/utils/app_dates.dart';
 import '../../domain/repositories/batch_repository.dart';
 
 class BatchRequest {
@@ -25,15 +26,14 @@ class BatchRequest {
     'name': name,
     'description': description,
     'sportId': sportId,
-    'startDate': startDate?.toIso8601String(),
-    'endDate': endDate?.toIso8601String(),
+    'startDate': startDate != null ? AppDates.toIsoDate(startDate!) : null,
+    'endDate': endDate != null ? AppDates.toIsoDate(endDate!) : null,
     'slots': slots.map(_slotJson).toList(),
     'coachIds': coachIds,
     'athleteIds': athleteIds,
   };
 
   static Map<String, dynamic> _slotJson(BatchSlotInput s) => {
-    'dayOfWeek': s.dayOfWeek.value,
     'startTime': s.startTime,
     'endTime': s.endTime,
     'location': s.location,

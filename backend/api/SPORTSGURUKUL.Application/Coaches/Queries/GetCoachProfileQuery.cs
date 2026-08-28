@@ -73,10 +73,11 @@ public sealed class GetCoachProfileQueryHandler
                 AcademyId = b.AcademyId.ToString(),
                 AcademyName = b.Academy.Name,
                 SportName = b.Sport?.Name,
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
                 AthletesCount = b.AthleteAssociations.Count,
                 Slots = b.Slots.Select(s => new CoachProfileBatchSlot
                 {
-                    DayOfWeek = (int)s.DayOfWeek,
                     StartTime = s.StartTime.ToString("HH:mm"),
                     EndTime = s.EndTime.ToString("HH:mm"),
                     Location = s.Location

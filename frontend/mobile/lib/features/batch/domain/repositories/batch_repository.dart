@@ -14,13 +14,11 @@ abstract class BatchRepository {
 
 class BatchSlotInput {
   const BatchSlotInput({
-    required this.dayOfWeek,
     required this.startTime,
     required this.endTime,
     this.location,
   });
 
-  final DayOfWeek dayOfWeek;
   final String startTime;
   final String endTime;
   final String? location;

@@ -20,12 +20,10 @@ public static class BatchResponseMapper
             CreatedAt = batch.CreatedAt,
             UpdatedAt = batch.UpdatedAt,
             Slots = batch.Slots
-                .OrderBy(s => s.DayOfWeek)
-                .ThenBy(s => s.StartTime)
+                .OrderBy(s => s.StartTime)
                 .Select(s => new BatchScheduleSlotResponse
                 {
                     SlotId = s.Id,
-                    DayOfWeek = s.DayOfWeek,
                     StartTime = s.StartTime,
                     EndTime = s.EndTime,
                     Location = s.Location,

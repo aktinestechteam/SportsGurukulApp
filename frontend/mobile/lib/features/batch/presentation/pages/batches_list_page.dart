@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme_extensions.dart';
+import '../../../../core/utils/time_format.dart';
 import '../../../../core/widgets/app_ambient_background.dart';
 import '../../../../core/widgets/app_badge.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -173,11 +174,7 @@ class _BatchCard extends StatelessWidget {
     final brand = BrandColors.of(context);
     final scheme = Theme.of(context).colorScheme;
     final sortedSlots = batch.slots.toList()
-      ..sort((a, b) {
-        final dayCmp = a.dayOfWeek.index.compareTo(b.dayOfWeek.index);
-        if (dayCmp != 0) return dayCmp;
-        return a.startTime.compareTo(b.startTime);
-      });
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -316,17 +313,9 @@ class _BatchCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  SizedBox(
-                    width: 90,
-                    child: Text(
-                      slot.dayOfWeek.label,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                   AppBadge(
-                    label: '${slot.startTime} – ${slot.endTime}',
+                    label:
+                        '${TimeFormat.clock(slot.startTime)} – ${TimeFormat.clock(slot.endTime)}',
                     icon: Icons.access_time,
                     compact: true,
                   ),

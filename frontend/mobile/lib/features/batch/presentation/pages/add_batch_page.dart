@@ -6,6 +6,7 @@ import '../../../../app/dependencies.dart';
 import '../../../../core/theme/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme_extensions.dart';
+import '../../../../core/utils/time_format.dart';
 import '../../../../core/widgets/app_ambient_background.dart';
 import '../../../../core/widgets/app_badge.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -64,7 +65,6 @@ class _AddBatchPageState extends State<AddBatchPage> {
     _selectedSportName = batch?.sportName;
     if (batch != null) {
       _slots.addAll(batch.slots.map((s) => BatchSlotInput(
-        dayOfWeek: s.dayOfWeek,
         startTime: s.startTime,
         endTime: s.endTime,
         location: s.location,
@@ -166,7 +166,6 @@ class _AddBatchPageState extends State<AddBatchPage> {
   }
 
   Future<BatchSlotInput?> _showAddSlotDialog() async {
-    DayOfWeek selectedDay = DayOfWeek.monday;
     TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
     TimeOfDay endTime = const TimeOfDay(hour: 10, minute: 0);
     final locationController = TextEditingController();
@@ -224,17 +223,6 @@ class _AddBatchPageState extends State<AddBatchPage> {
           builder: (context, setDialogState) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<DayOfWeek>(
-                initialValue: selectedDay,
-                decoration: const InputDecoration(labelText: 'Day'),
-                items: DayOfWeek.values
-                    .map((d) => DropdownMenuItem(value: d, child: Text(d.label)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setDialogState(() => selectedDay = v);
-                },
-              ),
-              const SizedBox(height: 16),
               InkWell(
                 onTap: () => pickTime(true, setDialogState),
                 child: InputDecorator(
@@ -276,7 +264,6 @@ class _AddBatchPageState extends State<AddBatchPage> {
               Navigator.pop(
                 context,
                 BatchSlotInput(
-                  dayOfWeek: selectedDay,
                   startTime: formatTime(startTime),
                   endTime: formatTime(endTime),
                   location: locationController.text.trim().isEmpty
@@ -1276,7 +1263,7 @@ class _SlotTile extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              '${slot.dayOfWeek.label} · ${slot.startTime} – ${slot.endTime}'
+              '${TimeFormat.clock(slot.startTime)} – ${TimeFormat.clock(slot.endTime)}'
               '${slot.location != null ? ' · ${slot.location}' : ''}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),

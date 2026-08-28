@@ -137,7 +137,6 @@ public sealed class CreateBatchCommandHandler
                 {
                     Id = Guid.NewGuid(),
                     BatchId = batch.Id,
-                    DayOfWeek = slot.DayOfWeek,
                     StartTime = slot.StartTime,
                     EndTime = slot.EndTime,
                     Location = slot.Location?.Trim(),
