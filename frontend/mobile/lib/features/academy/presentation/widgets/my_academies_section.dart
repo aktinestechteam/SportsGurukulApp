@@ -435,16 +435,38 @@ class _AcademyCard extends StatelessWidget {
                   }
                 },
               );
+              final videoTile = _ActionTile(
+                icon: Icons.videocam_outlined,
+                title: 'Videos',
+                subtitle: 'Review athlete video submissions',
+                onTap: () async {
+                  await context.push('/admin/academies/${academy.id}/videos');
+                  if (context.mounted) {
+                    context.read<AcademyProvider>().loadAcademies();
+                  }
+                },
+              );
               // Side-by-side only when each tile keeps enough text width;
               // otherwise stack the tiles full-width like list actions.
-              return constraints.maxWidth >= 560
-                  ? Row(
+              return constraints.maxWidth >= 760
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(child: coachTile),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(child: athleteTile),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(child: batchTile),
+                        Row(
+                          children: [
+                            Expanded(child: coachTile),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(child: athleteTile),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(child: batchTile),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(child: videoTile),
+                          ],
+                        ),
                       ],
                     )
                   : Column(
@@ -455,6 +477,8 @@ class _AcademyCard extends StatelessWidget {
                         athleteTile,
                         const SizedBox(height: AppSpacing.sm),
                         batchTile,
+                        const SizedBox(height: AppSpacing.sm),
+                        videoTile,
                       ],
                     );
             },

@@ -206,6 +206,13 @@ class _LoadedDashboard extends StatelessWidget {
               sessions: totalSessions,
             ),
             const SizedBox(height: AppSpacing.xxxl),
+            AppSectionHeader(
+              title: 'My Videos',
+              subtitle: 'Upload and review training videos with your coach',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _VideoEntryCard(),
+            const SizedBox(height: AppSpacing.xxxl),
             if (profile.sports.isNotEmpty) ...[
               AppSectionHeader(
                 title: 'My Sports',
@@ -547,6 +554,69 @@ class _AcademyCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// My Videos
+// ---------------------------------------------------------------------------
+
+class _VideoEntryCard extends StatelessWidget {
+  const _VideoEntryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/athlete/videos'),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AuthPalette.surface(context),
+          borderRadius: AppRadii.brMedium,
+          border: Border.all(color: AuthPalette.border(context)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AuthPalette.red.withValues(alpha: 0.1),
+                borderRadius: AppRadii.brMedium,
+              ),
+              child: const Icon(Icons.videocam_outlined, color: AuthPalette.red, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'View & share videos',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AuthPalette.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Upload training clips, see coach feedback and voice notes.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.3,
+                      color: AuthPalette.subtitle(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Icon(Icons.chevron_right, size: 22, color: AuthPalette.muted(context)),
+          ],
+        ),
       ),
     );
   }

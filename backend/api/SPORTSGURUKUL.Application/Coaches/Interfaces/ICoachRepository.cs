@@ -97,4 +97,12 @@ public interface ICoachRepository
     Task<Coach?> GetByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loads the coach profile for the given coach identity including the
+    /// associated user identity.
+    /// </summary>
+    Task<Coach?> GetByIdAsync(
+        Guid coachId,
+        CancellationToken cancellationToken = default);
 }

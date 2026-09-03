@@ -574,6 +574,9 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("AthleteId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("SportId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("AcademyId")
                         .HasColumnType("uuid");
 
@@ -583,13 +586,15 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("AssignedBy")
                         .HasColumnType("uuid");
 
-                    b.HasKey("CoachId", "AthleteId", "AcademyId");
+                    b.HasKey("CoachId", "AthleteId", "SportId", "AcademyId");
 
                     b.HasIndex("AcademyId")
                         .HasDatabaseName("IX_CoachAthletes_AcademyId");
 
                     b.HasIndex("AthleteId")
                         .HasDatabaseName("IX_CoachAthletes_AthleteId");
+
+                    b.HasIndex("SportId");
 
                     b.ToTable("CoachAthletes", (string)null);
                 });
@@ -867,6 +872,137 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.ToTable("UserRoles", (string)null);
                 });
 
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VideoSubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("VoiceNoteDurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VoiceNoteS3Key")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorUserId")
+                        .HasDatabaseName("IX_VideoComments_AuthorUserId");
+
+                    b.HasIndex("VideoSubmissionId")
+                        .HasDatabaseName("IX_VideoComments_VideoSubmissionId");
+
+                    b.ToTable("VideoComments", (string)null);
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("S3Key")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("SportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ThumbnailS3Key")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteId")
+                        .HasDatabaseName("IX_VideoSubmissions_AthleteId");
+
+                    b.HasIndex("SportId")
+                        .HasDatabaseName("IX_VideoSubmissions_SportId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_VideoSubmissions_Status");
+
+                    b.ToTable("VideoSubmissions", (string)null);
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VideoSubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_VideoViews_UserId");
+
+                    b.HasIndex("VideoSubmissionId")
+                        .HasDatabaseName("IX_VideoViews_VideoSubmissionId");
+
+                    b.ToTable("VideoViews", (string)null);
+                });
+
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Academy", b =>
                 {
                     b.HasOne("SPORTSGURUKUL.Domain.Entities.User", "OwnerUser")
@@ -1113,11 +1249,19 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.AcademySport", "Sport")
+                        .WithMany()
+                        .HasForeignKey("SportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Academy");
 
                     b.Navigation("Athlete");
 
                     b.Navigation("Coach");
+
+                    b.Navigation("Sport");
                 });
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.CoachSport", b =>
@@ -1189,6 +1333,62 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoComment", b =>
+                {
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.VideoSubmission", "VideoSubmission")
+                        .WithMany("Comments")
+                        .HasForeignKey("VideoSubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("VideoSubmission");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoSubmission", b =>
+                {
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.Athlete", "Athlete")
+                        .WithMany()
+                        .HasForeignKey("AthleteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.AcademySport", "Sport")
+                        .WithMany()
+                        .HasForeignKey("SportId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Athlete");
+
+                    b.Navigation("Sport");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoView", b =>
+                {
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SPORTSGURUKUL.Domain.Entities.VideoSubmission", "VideoSubmission")
+                        .WithMany("Views")
+                        .HasForeignKey("VideoSubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("VideoSubmission");
                 });
 
             modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.Academy", b =>
@@ -1271,6 +1471,13 @@ namespace SPORTSGURUKUL.Infrastructure.Persistence.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("SPORTSGURUKUL.Domain.Entities.VideoSubmission", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Views");
                 });
 #pragma warning restore 612, 618
         }

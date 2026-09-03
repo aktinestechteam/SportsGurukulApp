@@ -14,6 +14,7 @@ using SPORTSGURUKUL.Infrastructure.Persistence;
 using SPORTSGURUKUL.Infrastructure.Seeders;
 using SPORTSGURUKUL.Api.Middleware;
 using SPORTSGURUKUL.Api.Services;
+using SPORTSGURUKUL.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IClientInfoService, ClientInfoService>();
+
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IVideoHubService, VideoHubService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -78,6 +82,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtOptions.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret)),
             ClockSkew = TimeSpan.FromMinutes(1)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -141,5 +158,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<VideoHub>("/hubs/video");
 
 app.Run();

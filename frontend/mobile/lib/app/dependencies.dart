@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../core/network/api_client.dart';
 import '../core/storage/token_storage.dart';
+import 'video_realtime_session.dart';
 import '../features/academy/data/datasources/academy_remote_data_source.dart';
 import '../features/academy/data/repositories/academy_repository_impl.dart';
 import '../features/academy/domain/repositories/academy_repository.dart';
@@ -59,6 +60,24 @@ import '../features/coach/domain/usecases/get_coaches.dart';
 import '../features/coach/domain/usecases/update_coach.dart';
 import '../features/coach/presentation/providers/coach_profile_provider.dart';
 import '../features/coach/presentation/providers/coach_provider.dart';
+import '../features/video/data/datasources/video_remote_data_source.dart';
+import '../features/video/data/datasources/video_signalr_service.dart';
+import '../features/video/data/repositories/video_repository_impl.dart';
+import '../features/video/domain/repositories/video_repository.dart';
+import '../features/video/domain/usecases/add_comment.dart';
+import '../features/video/domain/usecases/create_video.dart';
+import '../features/video/domain/usecases/delete_comment.dart';
+import '../features/video/domain/usecases/delete_video.dart';
+import '../features/video/domain/usecases/edit_comment.dart';
+import '../features/video/domain/usecases/generate_presigned_url.dart';
+import '../features/video/domain/usecases/get_admin_coach_video_feed.dart';
+import '../features/video/domain/usecases/get_admin_coaches_overview.dart';
+import '../features/video/domain/usecases/get_my_videos.dart';
+import '../features/video/domain/usecases/get_notifications.dart';
+import '../features/video/domain/usecases/get_unread_count.dart';
+import '../features/video/domain/usecases/get_video.dart';
+import '../features/video/domain/usecases/get_video_feed.dart';
+import '../features/video/presentation/providers/video_provider.dart';
 
 class Dependencies {
   Dependencies._();
@@ -72,6 +91,9 @@ class Dependencies {
   static late final AthleteProvider athleteProvider;
   static late final AthleteProfileProvider athleteProfileProvider;
   static late final BatchProvider batchProvider;
+  static late final VideoProvider videoProvider;
+  static late final VideoRealtimeSession videoRealtimeSession;
+  static late final VideoSignalRService videoSignalRService;
 
   static void initialize() {
     tokenStorage = TokenStorage(storage: const FlutterSecureStorage());
@@ -166,6 +188,35 @@ class Dependencies {
       getBatch: GetBatch(batchRepository),
       updateBatch: UpdateBatch(batchRepository),
       deleteBatch: DeleteBatch(batchRepository),
+    );
+
+    final videoDataSource = VideoRemoteDataSource(apiClient: apiClient);
+    final VideoRepository videoRepository = VideoRepositoryImpl(
+      dataSource: videoDataSource,
+    );
+    videoSignalRService = VideoSignalRService(
+      tokenStorage: tokenStorage,
+    );
+    videoProvider = VideoProvider(
+      getMyVideos: GetMyVideos(videoRepository),
+      getVideoFeed: GetVideoFeed(videoRepository),
+      getVideo: GetVideo(videoRepository),
+      createVideo: CreateVideo(videoRepository),
+      addComment: AddComment(videoRepository),
+      editComment: EditComment(videoRepository),
+      deleteComment: DeleteComment(videoRepository),
+      deleteVideo: DeleteVideo(videoRepository),
+      getUnreadCount: GetUnreadCount(videoRepository),
+      getNotifications: GetNotifications(videoRepository),
+      getAdminCoachesOverview: GetAdminCoachesOverview(videoRepository),
+      getAdminCoachVideoFeed: GetAdminCoachVideoFeed(videoRepository),
+      generatePresignedUrl: GeneratePresignedUrl(videoRepository),
+      signalR: videoSignalRService,
+    );
+
+    videoRealtimeSession = VideoRealtimeSession(
+      authProvider: authProvider,
+      signalR: videoSignalRService,
     );
 
     apiClient.onAuthExpired = authProvider.handleSessionExpired;

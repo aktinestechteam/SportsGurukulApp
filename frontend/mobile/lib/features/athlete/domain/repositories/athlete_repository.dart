@@ -23,7 +23,7 @@ class AthleteRequestInput {
     required this.sportIds,
     this.address,
     this.emergencyContact,
-    this.coachIds = const [],
+    this.coachAssignments = const [],
   });
 
   final String firstName;
@@ -36,5 +36,12 @@ class AthleteRequestInput {
   final List<String> sportIds;
   final String? address;
   final String? emergencyContact;
+  final List<AthleteCoachAssignment> coachAssignments;
+}
+
+class AthleteCoachAssignment {
+  const AthleteCoachAssignment({required this.sportId, this.coachIds = const []});
+
+  final String sportId;
   final List<String> coachIds;
 }

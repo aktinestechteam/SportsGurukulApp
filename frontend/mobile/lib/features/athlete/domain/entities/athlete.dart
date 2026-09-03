@@ -50,21 +50,32 @@ class AthleteSport {
 }
 
 class MappedCoach {
-  const MappedCoach({required this.coachId, this.name = ''});
+  const MappedCoach({
+    required this.coachId,
+    this.name = '',
+    this.sportId = '',
+    this.sportName = '',
+  });
 
   final String coachId;
   final String name;
+  final String sportId;
+  final String sportName;
 
   factory MappedCoach.fromJson(Map<String, dynamic> json) {
     return MappedCoach(
       coachId: json['coachId'] as String? ?? '',
       name: json['name'] as String? ?? '',
+      sportId: json['sportId'] as String? ?? '',
+      sportName: json['sportName'] as String? ?? '',
     );
   }
 
   Map<String, dynamic> toJson() => {
     'coachId': coachId,
     'name': name,
+    'sportId': sportId,
+    'sportName': sportName,
   };
 }
 

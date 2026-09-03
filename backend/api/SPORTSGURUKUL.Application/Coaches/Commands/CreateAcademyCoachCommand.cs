@@ -129,7 +129,8 @@ public sealed class CreateAcademyCoachCommandHandler
 
             var branchId = ResolveBranch(academy, request);
             var sports = ResolveSports(academy, request);
-            var athleteIds = await ResolveAthleteIdsAsync(command.AcademyId, request, cancellationToken);
+            var athleteAssignments = await ResolveAthleteAssignmentsAsync(
+                command.AcademyId, request, cancellationToken);
 
             var publicUserId = await _publicUserIdGenerator.GenerateAsync(
                 _appOptions.UserIdPrefix,
@@ -204,16 +205,20 @@ public sealed class CreateAcademyCoachCommandHandler
                 Branch = branchId
             };
 
-            foreach (var athleteId in athleteIds)
+            foreach (var assignment in athleteAssignments)
             {
-                coach.AthleteMappings.Add(new CoachAthlete
+                foreach (var athleteId in assignment.AthleteIds)
                 {
-                    CoachId = coachId,
-                    AthleteId = athleteId,
-                    AcademyId = command.AcademyId,
-                    AssignedBy = ownerUserId,
-                    AssignedAt = now
-                });
+                    coach.AthleteMappings.Add(new CoachAthlete
+                    {
+                        CoachId = coachId,
+                        AthleteId = athleteId,
+                        SportId = assignment.SportId,
+                        AcademyId = command.AcademyId,
+                        AssignedBy = ownerUserId,
+                        AssignedAt = now
+                    });
+                }
             }
 
             await _userRepository.AddAsync(user, cancellationToken);
@@ -313,12 +318,12 @@ public sealed class CreateAcademyCoachCommandHandler
         return sports;
     }
 
-    private async Task<List<Guid>> ResolveAthleteIdsAsync(
+    private async Task<List<SportAthleteAssignment>> ResolveAthleteAssignmentsAsync(
         Guid academyId,
         CreateCoachRequest request,
         CancellationToken cancellationToken)
     {
-        if (request.AthleteIds.Count == 0)
+        if (request.AthleteAssignments.Count == 0)
         {
             return [];
         }
@@ -328,17 +333,32 @@ public sealed class CreateAcademyCoachCommandHandler
             cancellationToken);
         var allowed = academyAthleteIds.ToHashSet();
 
-        var result = new List<Guid>(request.AthleteIds.Count);
-        foreach (var athleteId in request.AthleteIds.Distinct())
+        var result = new List<SportAthleteAssignment>(request.AthleteAssignments.Count);
+        foreach (var assignment in request.AthleteAssignments)
         {
-            if (!allowed.Contains(athleteId))
+            if (assignment.AthleteIds.Count == 0)
             {
-                throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
-                    "athleteIds",
-                    "The selected athlete does not belong to this academy.");
+                continue;
             }
 
-            result.Add(athleteId);
+            var resolved = new List<Guid>(assignment.AthleteIds.Count);
+            foreach (var athleteId in assignment.AthleteIds.Distinct())
+            {
+                if (!allowed.Contains(athleteId))
+                {
+                    throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
+                        "athleteAssignments",
+                        "The selected athlete does not belong to this academy.");
+                }
+
+                resolved.Add(athleteId);
+            }
+
+            result.Add(new SportAthleteAssignment
+            {
+                SportId = assignment.SportId,
+                AthleteIds = resolved
+            });
         }
 
         return result;

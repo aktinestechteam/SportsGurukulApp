@@ -36,4 +36,6 @@ public sealed class MappedCoachResponse
 {
     public Guid CoachId { get; set; }
     public string Name { get; set; } = string.Empty;
+    public Guid SportId { get; set; }
+    public string SportName { get; set; } = string.Empty;
 }

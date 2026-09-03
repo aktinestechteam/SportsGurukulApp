@@ -1,9 +1,10 @@
+using SPORTSGURUKUL.Application.Coaches.DTOs;
 using SPORTSGURUKUL.Domain.Entities;
 
 namespace SPORTSGURUKUL.Application.Coaches.Interfaces;
 
 /// <summary>
-/// Repository for the coach-athlete many-to-many mapping scoped to an academy.
+/// Repository for the coach-athlete-sport many-to-many mapping scoped to an academy.
 /// </summary>
 public interface ICoachAthleteRepository
 {
@@ -34,26 +35,34 @@ public interface ICoachAthleteRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Replaces the set of athletes mapped to a coach within an academy. Existing
-    /// mappings for the pair are removed and the given set is added, preventing
-    /// duplicate coach-athlete records.
+    /// Loads every coach-athlete mapping for the given athlete across all
+    /// academies, including the mapped coach identity.
+    /// </summary>
+    Task<List<CoachAthlete>> GetByAthleteAsync(
+        Guid athleteId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Replaces the full set of athlete mappings for a coach within an academy.
+    /// The mappings are grouped by sport; existing mappings for the coach and
+    /// academy are removed and the given set is added, preventing duplicates.
     /// </summary>
     Task ReplaceCoachMappingsAsync(
         Guid coachId,
         Guid academyId,
-        IEnumerable<Guid> athleteIds,
+        IEnumerable<SportAthleteAssignment> assignments,
         Guid assignedBy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Replaces the set of coaches mapped to an athlete within an academy. Existing
-    /// mappings for the pair are removed and the given set is added, preventing
-    /// duplicate coach-athlete records.
+    /// Replaces the full set of coach mappings for an athlete within an academy.
+    /// The mappings are grouped by sport; existing mappings for the athlete and
+    /// academy are removed and the given set is added, preventing duplicates.
     /// </summary>
     Task ReplaceAthleteMappingsAsync(
         Guid athleteId,
         Guid academyId,
-        IEnumerable<Guid> coachIds,
+        IEnumerable<SportCoachAssignment> assignments,
         Guid assignedBy,
         CancellationToken cancellationToken = default);
 

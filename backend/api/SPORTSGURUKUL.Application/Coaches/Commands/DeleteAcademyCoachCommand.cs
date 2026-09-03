@@ -38,6 +38,7 @@ public sealed class DeleteAcademyCoachCommandHandler
     private readonly IBatchRepository _batchRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IVideoHubService _videoHubService;
     private readonly ILogger<DeleteAcademyCoachCommandHandler> _logger;
 
     public DeleteAcademyCoachCommandHandler(
@@ -49,6 +50,7 @@ public sealed class DeleteAcademyCoachCommandHandler
         IBatchRepository batchRepository,
         ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
+        IVideoHubService videoHubService,
         ILogger<DeleteAcademyCoachCommandHandler> logger)
     {
         _academyRepository = academyRepository;
@@ -59,6 +61,7 @@ public sealed class DeleteAcademyCoachCommandHandler
         _batchRepository = batchRepository;
         _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
+        _videoHubService = videoHubService;
         _logger = logger;
     }
 
@@ -86,6 +89,11 @@ public sealed class DeleteAcademyCoachCommandHandler
 
         var coachId = association.CoachId;
         var userId = association.Coach.UserId;
+
+        var assignedAthletes = await _coachAthleteRepository.GetByCoachAndAcademyAsync(
+            coachId,
+            command.AcademyId,
+            cancellationToken);
 
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
         try
@@ -120,6 +128,11 @@ public sealed class DeleteAcademyCoachCommandHandler
                 coachId,
                 command.AcademyId,
                 ownerUserId);
+
+            foreach (var athlete in assignedAthletes)
+            {
+                await _videoHubService.PushCoachRemovedAsync(coachId, athlete.AthleteId);
+            }
 
             return ApiResponse<object>.OkNoData("Coach removed from the academy successfully.");
         }

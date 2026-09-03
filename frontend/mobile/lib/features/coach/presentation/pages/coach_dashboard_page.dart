@@ -18,6 +18,7 @@ import '../../../../core/widgets/batch_schedule_calendar.dart';
 import '../../../authentication/domain/entities/user.dart';
 import '../../../authentication/presentation/providers/auth_provider.dart';
 import '../../domain/entities/coach_profile.dart';
+import '../../../video/presentation/providers/video_provider.dart';
 import '../providers/coach_profile_provider.dart';
 
 class CoachDashboardPage extends StatefulWidget {
@@ -34,6 +35,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CoachProfileProvider>().loadProfile();
+        context.read<VideoProvider>().loadUnreadCount();
       }
     });
   }
@@ -176,6 +178,15 @@ class _LoadedDashboard extends StatelessWidget {
               batches: profile.batches.length,
               athletes: profile.athletes.length,
               sessions: totalSessions,
+            ),
+            const SizedBox(height: AppSpacing.xxxl),
+            AppSectionHeader(
+              title: 'Athlete Videos',
+              subtitle: 'Review clips, leave feedback and voice notes',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _VideoEntryCard(
+              unreadCount: context.watch<VideoProvider>().unreadCount,
             ),
             const SizedBox(height: AppSpacing.xxxl),
             if (profile.academies.isNotEmpty) ...[
@@ -460,6 +471,101 @@ class _InfoPill extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Athlete Videos
+// ---------------------------------------------------------------------------
+
+class _VideoEntryCard extends StatelessWidget {
+  const _VideoEntryCard({required this.unreadCount});
+
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/coach/videos'),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AuthPalette.surface(context),
+          borderRadius: AppRadii.brMedium,
+          border: Border.all(color: AuthPalette.border(context)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AuthPalette.red.withValues(alpha: 0.1),
+                borderRadius: AppRadii.brMedium,
+              ),
+              child: const Icon(Icons.videocam_outlined, color: AuthPalette.red, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Review athlete videos',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AuthPalette.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'View new uploads and leave text or voice-note feedback.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.3,
+                      color: AuthPalette.subtitle(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (unreadCount > 0) ...[
+              const SizedBox(width: AppSpacing.xs),
+              _UnreadBadge(count: unreadCount),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+            const SizedBox(width: AppSpacing.xs),
+            Icon(Icons.chevron_right, size: 22, color: AuthPalette.muted(context)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AuthPalette.red,
+        borderRadius: AppRadii.brPill,
+      ),
+      child: Text(
+        '$count',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

@@ -8,7 +8,7 @@ class CoachRequest {
     required this.mobileNumber,
     this.branchId,
     this.sports = const [],
-    this.athleteIds = const [],
+    this.athleteAssignments = const [],
   });
 
   final String firstName;
@@ -17,7 +17,7 @@ class CoachRequest {
   final String mobileNumber;
   final String? branchId;
   final List<CoachSportInput> sports;
-  final List<String> athleteIds;
+  final List<CoachAthleteAssignment> athleteAssignments;
 
   Map<String, dynamic> toJson() => {
     'firstName': firstName,
@@ -26,7 +26,10 @@ class CoachRequest {
     'mobileNumber': mobileNumber,
     'branchId': branchId,
     'sports': sports.map(_sportJson).toList(),
-    'athleteIds': athleteIds,
+    'athleteAssignments': athleteAssignments
+        .where((a) => a.athleteIds.isNotEmpty)
+        .map((a) => {'sportId': a.sportId, 'athleteIds': a.athleteIds})
+        .toList(),
   };
 
   static Map<String, dynamic> _sportJson(CoachSportInput s) => {

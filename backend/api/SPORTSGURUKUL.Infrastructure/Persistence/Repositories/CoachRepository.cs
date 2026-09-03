@@ -158,4 +158,12 @@ public class CoachRepository : ICoachRepository
             .Include(c => c.Sports)
                 .ThenInclude(cs => cs.Sport)
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
+
+    public Task<Coach?> GetByIdAsync(
+        Guid coachId,
+        CancellationToken cancellationToken = default)
+        => _context.Coaches
+            .AsNoTracking()
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == coachId, cancellationToken);
 }

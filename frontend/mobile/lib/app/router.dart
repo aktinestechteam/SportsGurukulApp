@@ -25,6 +25,12 @@ import '../features/authentication/presentation/pages/sign_up_page.dart';
 import '../features/authentication/presentation/pages/splash_page.dart';
 import '../features/authentication/domain/entities/user.dart';
 import '../features/authentication/presentation/providers/auth_provider.dart';
+import '../features/video/presentation/pages/admin_coach_video_feed_page.dart';
+import '../features/video/presentation/pages/admin_video_overview_page.dart';
+import '../features/video/presentation/pages/athlete_videos_page.dart';
+import '../features/video/presentation/pages/coach_video_feed_page.dart';
+import '../features/video/presentation/pages/video_detail_page.dart';
+import '../features/video/presentation/pages/video_upload_page.dart';
 import 'dependencies.dart';
 
 class AppRouter {
@@ -106,8 +112,33 @@ class AppRouter {
           builder: (context, state) => const CoachDashboardPage(),
         ),
         GoRoute(
+          path: '/coach/videos',
+          builder: (context, state) => const CoachVideoFeedPage(),
+        ),
+        GoRoute(
+          path: '/coach/videos/:videoId',
+          builder: (context, state) => VideoDetailPage(
+            videoId: state.pathParameters['videoId'] ?? '',
+            role: VideoRole.coach,
+          ),
+        ),
+        GoRoute(
           path: '/athlete/dashboard',
           builder: (context, state) => const AthleteDashboardPage(),
+        ),
+        GoRoute(
+          path: '/athlete/videos',
+          builder: (context, state) => const AthleteVideosPage(),
+        ),
+        GoRoute(
+          path: '/athlete/videos/upload',
+          builder: (context, state) => const VideoUploadPage(),
+        ),
+        GoRoute(
+          path: '/athlete/videos/:videoId',
+          builder: (context, state) => VideoDetailPage(
+            videoId: state.pathParameters['videoId'] ?? '',
+          ),
         ),
         GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
         GoRoute(
@@ -205,6 +236,28 @@ class AppRouter {
               batch: extra.batch,
             );
           },
+        ),
+        GoRoute(
+          path: '/admin/academies/:academyId/videos',
+          builder: (context, state) => AdminVideoOverviewPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/admin/academies/:academyId/videos/:coachId',
+          builder: (context, state) => AdminCoachVideoFeedPage(
+            academyId: state.pathParameters['academyId'] ?? '',
+            coachId: state.pathParameters['coachId'] ?? '',
+            coachName: state.extra as String? ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/admin/academies/:academyId/videos/:coachId/:videoId',
+          builder: (context, state) => VideoDetailPage(
+            videoId: state.pathParameters['videoId'] ?? '',
+            role: VideoRole.admin,
+            adminCoachName: state.extra as String? ?? '',
+          ),
         ),
       ],
     );

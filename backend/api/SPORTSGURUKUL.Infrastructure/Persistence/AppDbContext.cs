@@ -42,6 +42,10 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<BatchCoach> BatchCoaches => Set<BatchCoach>();
     public DbSet<BatchAthlete> BatchAthletes => Set<BatchAthlete>();
 
+    public DbSet<VideoSubmission> VideoSubmissions => Set<VideoSubmission>();
+    public DbSet<VideoComment> VideoComments => Set<VideoComment>();
+    public DbSet<VideoView> VideoViews => Set<VideoView>();
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => base.SaveChangesAsync(cancellationToken);
 

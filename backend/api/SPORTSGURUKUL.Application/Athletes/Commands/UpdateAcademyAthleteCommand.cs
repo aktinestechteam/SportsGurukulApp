@@ -6,6 +6,7 @@ using SPORTSGURUKUL.Application.Athletes.Common;
 using SPORTSGURUKUL.Application.Athletes.DTOs;
 using SPORTSGURUKUL.Application.Athletes.Interfaces;
 using SPORTSGURUKUL.Application.Authentication.Interfaces;
+using SPORTSGURUKUL.Application.Coaches.DTOs;
 using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Application.Common;
 using SPORTSGURUKUL.Application.Common.Exceptions;
@@ -102,7 +103,10 @@ public sealed class UpdateAcademyAthleteCommandHandler
 
         var branch = ResolveBranch(academy, request);
         var sports = ResolveSports(academy, request);
-        var coachIds = await ResolveCoachIdsAsync(command.AcademyId, request, cancellationToken);
+        var coachAssignments = await ResolveCoachAssignmentsAsync(
+            command.AcademyId,
+            request,
+            cancellationToken);
 
         // Date-only payloads (e.g. "2011-01-01") deserialize to a DateTime
         // with Kind=Unspecified, which Npgsql rejects for timestamptz
@@ -138,7 +142,7 @@ public sealed class UpdateAcademyAthleteCommandHandler
         await _coachAthleteRepository.ReplaceAthleteMappingsAsync(
             command.AthleteId,
             command.AcademyId,
-            coachIds,
+            coachAssignments,
             ownerUserId,
             cancellationToken);
 
@@ -166,12 +170,12 @@ public sealed class UpdateAcademyAthleteCommandHandler
             "Athlete updated successfully.");
     }
 
-    private async Task<List<Guid>> ResolveCoachIdsAsync(
+    private async Task<List<SportCoachAssignment>> ResolveCoachAssignmentsAsync(
         Guid academyId,
         CreateAthleteRequest request,
         CancellationToken cancellationToken)
     {
-        if (request.CoachIds.Count == 0)
+        if (request.CoachAssignments.Count == 0)
         {
             return [];
         }
@@ -181,17 +185,32 @@ public sealed class UpdateAcademyAthleteCommandHandler
             cancellationToken);
         var allowed = academyCoachIds.ToHashSet();
 
-        var result = new List<Guid>(request.CoachIds.Count);
-        foreach (var coachId in request.CoachIds.Distinct())
+        var result = new List<SportCoachAssignment>(request.CoachAssignments.Count);
+        foreach (var assignment in request.CoachAssignments)
         {
-            if (!allowed.Contains(coachId))
+            if (assignment.CoachIds.Count == 0)
             {
-                throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
-                    "coachIds",
-                    "The selected coach does not belong to this academy.");
+                continue;
             }
 
-            result.Add(coachId);
+            var resolved = new List<Guid>(assignment.CoachIds.Count);
+            foreach (var coachId in assignment.CoachIds.Distinct())
+            {
+                if (!allowed.Contains(coachId))
+                {
+                    throw new SPORTSGURUKUL.Application.Common.Exceptions.ValidationException(
+                        "coachAssignments",
+                        "The selected coach does not belong to this academy.");
+                }
+
+                resolved.Add(coachId);
+            }
+
+            result.Add(new SportCoachAssignment
+            {
+                SportId = assignment.SportId,
+                CoachIds = resolved
+            });
         }
 
         return result;

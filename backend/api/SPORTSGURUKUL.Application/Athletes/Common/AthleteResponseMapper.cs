@@ -68,7 +68,9 @@ public static class AthleteResponseMapper
             .Select(ca => new MappedCoachResponse
             {
                 CoachId = ca.CoachId,
-                Name = BuildFullName(ca.Coach.User.FirstName, ca.Coach.User.LastName)
+                Name = BuildFullName(ca.Coach.User.FirstName, ca.Coach.User.LastName),
+                SportId = ca.SportId,
+                SportName = ca.Sport?.Name ?? string.Empty
             })
             .ToList() ?? [];
 

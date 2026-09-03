@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SPORTSGURUKUL.Application.Coaches.DTOs;
 using SPORTSGURUKUL.Application.Coaches.Interfaces;
 using SPORTSGURUKUL.Domain.Entities;
 
@@ -22,6 +23,7 @@ public class CoachAthleteRepository : ICoachAthleteRepository
                 .ThenInclude(a => a.User)
             .Include(ca => ca.Coach)
                 .ThenInclude(c => c.User)
+            .Include(ca => ca.Sport)
             .Where(ca => ca.AcademyId == academyId)
             .OrderBy(ca => ca.Athlete.User.FirstName)
             .ThenBy(ca => ca.Athlete.User.LastName)
@@ -35,6 +37,7 @@ public class CoachAthleteRepository : ICoachAthleteRepository
             .AsNoTracking()
             .Include(ca => ca.Athlete)
                 .ThenInclude(a => a.User)
+            .Include(ca => ca.Sport)
             .Where(ca => ca.CoachId == coachId && ca.AcademyId == academyId)
             .OrderBy(ca => ca.Athlete.User.FirstName)
             .ThenBy(ca => ca.Athlete.User.LastName)
@@ -48,7 +51,21 @@ public class CoachAthleteRepository : ICoachAthleteRepository
             .AsNoTracking()
             .Include(ca => ca.Coach)
                 .ThenInclude(c => c.User)
+            .Include(ca => ca.Sport)
             .Where(ca => ca.AthleteId == athleteId && ca.AcademyId == academyId)
+            .OrderBy(ca => ca.Coach.User.FirstName)
+            .ThenBy(ca => ca.Coach.User.LastName)
+            .ToListAsync(cancellationToken);
+
+    public Task<List<CoachAthlete>> GetByAthleteAsync(
+        Guid athleteId,
+        CancellationToken cancellationToken = default)
+        => _context.CoachAthletes
+            .AsNoTracking()
+            .Include(ca => ca.Coach)
+                .ThenInclude(c => c.User)
+            .Include(ca => ca.Sport)
+            .Where(ca => ca.AthleteId == athleteId)
             .OrderBy(ca => ca.Coach.User.FirstName)
             .ThenBy(ca => ca.Coach.User.LastName)
             .ToListAsync(cancellationToken);
@@ -56,23 +73,23 @@ public class CoachAthleteRepository : ICoachAthleteRepository
     public Task ReplaceCoachMappingsAsync(
         Guid coachId,
         Guid academyId,
-        IEnumerable<Guid> athleteIds,
+        IEnumerable<SportAthleteAssignment> assignments,
         Guid assignedBy,
         CancellationToken cancellationToken = default)
         => ReplaceMappingsAsync(
             _context.CoachAthletes.Where(ca => ca.CoachId == coachId && ca.AcademyId == academyId),
-            BuildCoachMappings(coachId, academyId, athleteIds, assignedBy),
+            BuildCoachMappings(coachId, academyId, assignments, assignedBy),
             cancellationToken);
 
     public Task ReplaceAthleteMappingsAsync(
         Guid athleteId,
         Guid academyId,
-        IEnumerable<Guid> coachIds,
+        IEnumerable<SportCoachAssignment> assignments,
         Guid assignedBy,
         CancellationToken cancellationToken = default)
         => ReplaceMappingsAsync(
             _context.CoachAthletes.Where(ca => ca.AthleteId == athleteId && ca.AcademyId == academyId),
-            BuildAthleteMappings(athleteId, academyId, coachIds, assignedBy),
+            BuildAthleteMappings(athleteId, academyId, assignments, assignedBy),
             cancellationToken);
 
     private async Task ReplaceMappingsAsync(
@@ -92,19 +109,22 @@ public class CoachAthleteRepository : ICoachAthleteRepository
     private static List<CoachAthlete> BuildCoachMappings(
         Guid coachId,
         Guid academyId,
-        IEnumerable<Guid> athleteIds,
+        IEnumerable<SportAthleteAssignment> assignments,
         Guid assignedBy)
     {
         var now = DateTime.UtcNow;
-        var seen = new HashSet<Guid>();
+        var seen = new HashSet<(Guid SportId, Guid AthleteId)>();
 
-        return athleteIds
-            .Distinct()
-            .Where(seen.Add)
-            .Select(athleteId => new CoachAthlete
+        return assignments
+            .SelectMany(a => a.AthleteIds
+                .Distinct()
+                .Select(athleteId => (a.SportId, athleteId)))
+            .Where(pair => seen.Add(pair))
+            .Select(pair => new CoachAthlete
             {
                 CoachId = coachId,
-                AthleteId = athleteId,
+                AthleteId = pair.athleteId,
+                SportId = pair.SportId,
                 AcademyId = academyId,
                 AssignedBy = assignedBy,
                 AssignedAt = now
@@ -115,19 +135,22 @@ public class CoachAthleteRepository : ICoachAthleteRepository
     private static List<CoachAthlete> BuildAthleteMappings(
         Guid athleteId,
         Guid academyId,
-        IEnumerable<Guid> coachIds,
+        IEnumerable<SportCoachAssignment> assignments,
         Guid assignedBy)
     {
         var now = DateTime.UtcNow;
-        var seen = new HashSet<Guid>();
+        var seen = new HashSet<(Guid SportId, Guid CoachId)>();
 
-        return coachIds
-            .Distinct()
-            .Where(seen.Add)
-            .Select(coachId => new CoachAthlete
+        return assignments
+            .SelectMany(a => a.CoachIds
+                .Distinct()
+                .Select(coachId => (a.SportId, coachId)))
+            .Where(pair => seen.Add(pair))
+            .Select(pair => new CoachAthlete
             {
-                CoachId = coachId,
+                CoachId = pair.coachId,
                 AthleteId = athleteId,
+                SportId = pair.SportId,
                 AcademyId = academyId,
                 AssignedBy = assignedBy,
                 AssignedAt = now
@@ -161,6 +184,7 @@ public class CoachAthleteRepository : ICoachAthleteRepository
             .Include(ca => ca.Athlete)
                 .ThenInclude(a => a.Sports)
                     .ThenInclude(s => s.Sport)
+            .Include(ca => ca.Sport)
             .Include(ca => ca.Academy)
             .Where(ca => ca.CoachId == coachId)
             .OrderBy(ca => ca.Athlete.User.FirstName)

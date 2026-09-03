@@ -322,7 +322,8 @@ public class CreateAcademyAthleteCommandTests
             .Callback<Athlete, CancellationToken>((a, _) => createdAthlete = a);
 
         var request = BuildRequest();
-        request.CoachIds = [coachId];
+        request.CoachAssignments =
+            [new AthleteCoachAssignment { SportId = _sportId, CoachIds = [coachId] }];
         var handler = CreateHandler();
 
         await handler.Handle(new CreateAcademyAthleteCommand(_academyId, request), CancellationToken.None);
@@ -330,6 +331,7 @@ public class CreateAcademyAthleteCommandTests
         Assert.NotNull(createdAthlete);
         var mapping = Assert.Single(createdAthlete!.CoachMappings);
         Assert.Equal(coachId, mapping.CoachId);
+        Assert.Equal(_sportId, mapping.SportId);
         Assert.Equal(_academyId, mapping.AcademyId);
         Assert.Equal(createdAthlete.Id, mapping.AthleteId);
     }
@@ -338,7 +340,8 @@ public class CreateAcademyAthleteCommandTests
     public async Task Create_CoachNotInAcademy_ThrowsValidationException()
     {
         var request = BuildRequest();
-        request.CoachIds = [Guid.NewGuid()];
+        request.CoachAssignments =
+            [new AthleteCoachAssignment { SportId = _sportId, CoachIds = [Guid.NewGuid()] }];
 
         var handler = CreateHandler();
 

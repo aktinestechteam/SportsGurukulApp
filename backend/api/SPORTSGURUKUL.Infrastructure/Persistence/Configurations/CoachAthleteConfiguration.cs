@@ -10,7 +10,7 @@ public class CoachAthleteConfiguration : IEntityTypeConfiguration<CoachAthlete>
     {
         builder.ToTable("CoachAthletes");
 
-        builder.HasKey(ca => new { ca.CoachId, ca.AthleteId, ca.AcademyId });
+        builder.HasKey(ca => new { ca.CoachId, ca.AthleteId, ca.SportId, ca.AcademyId });
 
         builder.Property(ca => ca.AssignedAt)
             .IsRequired();
@@ -29,6 +29,11 @@ public class CoachAthleteConfiguration : IEntityTypeConfiguration<CoachAthlete>
         builder.HasOne(ca => ca.Athlete)
             .WithMany(a => a.CoachMappings)
             .HasForeignKey(ca => ca.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(ca => ca.Sport)
+            .WithMany()
+            .HasForeignKey(ca => ca.SportId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(ca => ca.Academy)

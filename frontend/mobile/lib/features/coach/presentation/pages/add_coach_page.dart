@@ -210,6 +210,24 @@ class _AddCoachPageState extends State<AddCoachPage> {
         ),
     ];
 
+    final athleteAssignments = [
+      for (final sportId in _selectedSportIds)
+        if (_academyAthletes.any(
+          (a) =>
+              _selectedAthleteIds.contains(a.athleteId) &&
+              a.sports.any((s) => s.sportId == sportId),
+        ))
+          CoachAthleteAssignment(
+            sportId: sportId,
+            athleteIds: [
+              for (final a in _academyAthletes)
+                if (_selectedAthleteIds.contains(a.athleteId) &&
+                    a.sports.any((s) => s.sportId == sportId))
+                  a.athleteId,
+            ],
+          ),
+    ];
+
     final input = CoachRequestInput(
       firstName: _firstName.text.trim(),
       lastName: _lastName.text.trim(),
@@ -217,7 +235,7 @@ class _AddCoachPageState extends State<AddCoachPage> {
       mobileNumber: _mobile.text.trim(),
       branchId: academy.branches.isEmpty ? null : _selectedBranchId,
       sports: sports,
-      athleteIds: _selectedAthleteIds.toList(),
+      athleteAssignments: athleteAssignments,
     );
 
     final provider = context.read<CoachProvider>();

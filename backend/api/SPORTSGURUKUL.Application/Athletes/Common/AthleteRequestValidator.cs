@@ -39,10 +39,9 @@ public sealed class CreateAthleteRequestValidator : AbstractValidator<CreateAthl
             .Must(sports => sports.Count == sports.Distinct().Count())
             .WithMessage("Duplicate sports are not allowed.");
 
-        RuleFor(x => x.CoachIds)
-            .Must(coaches => coaches.Count == coaches.Distinct().Count())
-            .When(x => x.CoachIds.Count > 0)
-            .WithMessage("Duplicate coaches are not allowed.");
+        RuleFor(x => x.CoachAssignments)
+            .Must(HaveDistinctCoachIds)
+            .WithMessage("Each coach can be assigned to a sport only once.");
 
         RuleFor(x => x.Address)
             .MaximumLength(500).WithMessage("Address must not exceed 500 characters.");
@@ -55,6 +54,12 @@ public sealed class CreateAthleteRequestValidator : AbstractValidator<CreateAthl
 
     private static bool BeInThePast(DateTime dateOfBirth)
         => dateOfBirth.Date < DateTime.UtcNow.Date;
+
+    private static bool HaveDistinctCoachIds(List<AthleteCoachAssignment> assignments)
+        => assignments
+            .SelectMany(a => a.CoachIds)
+            .Distinct()
+            .Count() == assignments.SelectMany(a => a.CoachIds).Count();
 
     private static bool HaveValidAge(DateTime dateOfBirth)
     {

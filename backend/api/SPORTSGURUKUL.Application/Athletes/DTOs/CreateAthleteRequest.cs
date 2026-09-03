@@ -26,8 +26,18 @@ public sealed class CreateAthleteRequest
     public List<Guid> SportIds { get; set; } = [];
 
     /// <summary>
-    /// Coaches belonging to the academy that should be mapped to this athlete.
-    /// A coach can be mapped to multiple athletes. Duplicates are ignored.
+    /// Coaches mapped to this athlete grouped per sport. Each entry pairs a
+    /// sport with the coaches assigned to this athlete for that sport. A coach
+    /// may appear under multiple sports. Duplicates are ignored.
     /// </summary>
+    public List<AthleteCoachAssignment> CoachAssignments { get; set; } = [];
+}
+
+/// <summary>
+/// Assigns a set of coaches to an athlete for a single sport.
+/// </summary>
+public sealed class AthleteCoachAssignment
+{
+    public Guid SportId { get; set; }
     public List<Guid> CoachIds { get; set; } = [];
 }

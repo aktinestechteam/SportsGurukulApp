@@ -55,7 +55,7 @@ class _AddAthletePageState extends State<AddAthletePage> {
   final Set<String> _selectedSportIds = {};
 
   List<Coach> _academyCoaches = [];
-  final Set<String> _selectedCoachIds = {};
+  final Map<String, Set<String>> _coachesBySport = {};
   bool _loadingCoaches = false;
 
   bool _loadingFallback = false;
@@ -82,7 +82,9 @@ class _AddAthletePageState extends State<AddAthletePage> {
         _selectedSportIds.add(sport.sportId);
       }
       for (final coach in editingAthlete.mappedCoaches) {
-        _selectedCoachIds.add(coach.coachId);
+        _coachesBySport
+            .putIfAbsent(coach.sportId, () => {})
+            .add(coach.coachId);
       }
     }
 
@@ -160,15 +162,6 @@ class _AddAthletePageState extends State<AddAthletePage> {
     }
   }
 
-  List<Coach> get _filteredCoaches {
-    if (_selectedSportIds.isEmpty) return _academyCoaches;
-    return _academyCoaches.where((coach) {
-      return coach.sports.any(
-        (cs) => _selectedSportIds.contains(cs.sportId),
-      );
-    }).toList();
-  }
-
   Future<void> _submit() async {
     final academy = _academy;
     if (academy == null) {
@@ -215,7 +208,14 @@ class _AddAthletePageState extends State<AddAthletePage> {
       sportIds: _selectedSportIds.toList(),
       address: _optional(_address.text),
       emergencyContact: _optional(_emergencyContact.text),
-      coachIds: _selectedCoachIds.toList(),
+      coachAssignments: [
+        for (final entry in _coachesBySport.entries)
+          if (entry.value.isNotEmpty)
+            AthleteCoachAssignment(
+              sportId: entry.key,
+              coachIds: entry.value.toList(),
+            ),
+      ],
     );
 
     final provider = context.read<AthleteProvider>();
@@ -439,6 +439,7 @@ class _AddAthletePageState extends State<AddAthletePage> {
                                             _selectedSportIds.add(sport.id);
                                           } else {
                                             _selectedSportIds.remove(sport.id);
+                                            _coachesBySport.remove(sport.id);
                                           }
                                         }),
                                         title: Text(sport.name),
@@ -456,8 +457,8 @@ class _AddAthletePageState extends State<AddAthletePage> {
                                 AppSectionHeader(
                                   title: 'Coaches',
                                   subtitle: _selectedSportIds.isEmpty
-                                      ? 'Select at least one sport to see available coaches.'
-                                      : 'Coaches who train the selected sports.',
+                                      ? 'Select at least one sport to assign coaches.'
+                                      : 'Assign coaches for each selected sport.',
                                   spacing: AppSpacing.md,
                                 ),
                                 if (_loadingCoaches)
@@ -479,37 +480,50 @@ class _AddAthletePageState extends State<AddAthletePage> {
                                       'No coaches in this academy yet. You can assign coaches later.',
                                     ),
                                   )
-                                else ...[
-                                  for (final coach in _filteredCoaches)
-                                    _CoachTile(
-                                      coach: coach,
-                                      selectedSportIds: _selectedSportIds,
-                                      selected: _selectedCoachIds.contains(
-                                        coach.coachId,
-                                      ),
-                                      onChanged: (selected) => setState(() {
-                                        if (selected) {
-                                          _selectedCoachIds.add(
-                                            coach.coachId,
-                                          );
-                                        } else {
-                                          _selectedCoachIds.remove(
-                                            coach.coachId,
-                                          );
-                                        }
-                                      }),
+                                else if (_selectedSportIds.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
                                     ),
-                                  if (_selectedSportIds.isNotEmpty &&
-                                      _filteredCoaches.isEmpty)
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: AppSpacing.sm,
-                                      ),
-                                      child: Text(
-                                        'No coaches assigned to the selected sports.',
-                                      ),
+                                    child: Text(
+                                      'Select at least one sport to see the coaches you can assign.',
                                     ),
-                                ],
+                                  )
+                                else if (academy == null ||
+                                    academy.sports.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      'No sports configured for this academy yet.',
+                                    ),
+                                  )
+                                else
+                                  for (final sport in academy.sports)
+                                    if (_selectedSportIds.contains(sport.id))
+                                      _SportCoachGroup(
+                                        sportId: sport.id,
+                                        sportName: sport.name,
+                                        coaches: _academyCoaches
+                                            .where((c) => c.sports.any(
+                                                  (cs) =>
+                                                      cs.sportId == sport.id,
+                                                ))
+                                            .toList(),
+                                        selectedCoachIds:
+                                            _coachesBySport[sport.id] ?? {},
+                                        onChanged: (coachId, selected) =>
+                                            setState(() {
+                                          final set = _coachesBySport
+                                              .putIfAbsent(sport.id, () => {});
+                                          if (selected) {
+                                            set.add(coachId);
+                                          } else {
+                                            set.remove(coachId);
+                                          }
+                                        }),
+                                      ),
                               ],
                             ),
                           ),
@@ -598,39 +612,55 @@ class _BranchSelector extends StatelessWidget {
   }
 }
 
-class _CoachTile extends StatelessWidget {
-  const _CoachTile({
-    required this.coach,
-    required this.selectedSportIds,
-    required this.selected,
+class _SportCoachGroup extends StatelessWidget {
+  const _SportCoachGroup({
+    required this.sportId,
+    required this.sportName,
+    required this.coaches,
+    required this.selectedCoachIds,
     required this.onChanged,
   });
 
-  final Coach coach;
-  final Set<String> selectedSportIds;
-  final bool selected;
-  final ValueChanged<bool> onChanged;
+  final String sportId;
+  final String sportName;
+  final List<Coach> coaches;
+  final Set<String> selectedCoachIds;
+  final void Function(String coachId, bool selected) onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final matchingSports = coach.sports
-        .where((cs) => selectedSportIds.contains(cs.sportId))
-        .map((cs) => cs.name)
-        .toList();
-
-    return Material(
-      type: MaterialType.transparency,
-      child: CheckboxListTile(
-        value: selected,
-        onChanged: (value) => onChanged(value ?? false),
-        title: Text(coach.fullName),
-        subtitle: Text(
-          matchingSports.isEmpty
-              ? coach.sports.map((s) => s.name).join(', ')
-              : 'Teaches: ${matchingSports.join(', ')}',
-        ),
-        controlAffinity: ListTileControlAffinity.leading,
-        contentPadding: EdgeInsets.zero,
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            sportName,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          if (coaches.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              child: Text('No coaches train this sport yet.'),
+            )
+          else
+            for (final coach in coaches)
+              Material(
+                type: MaterialType.transparency,
+                child: CheckboxListTile(
+                  dense: true,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: selectedCoachIds.contains(coach.coachId),
+                  onChanged: (selected) =>
+                      onChanged(coach.coachId, selected ?? false),
+                  title: Text(coach.fullName),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+        ],
       ),
     );
   }
