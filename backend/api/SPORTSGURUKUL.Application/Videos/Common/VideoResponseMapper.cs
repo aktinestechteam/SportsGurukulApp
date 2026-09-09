@@ -18,6 +18,7 @@ public static class VideoResponseMapper
         {
             Id = video.Id,
             Title = video.Title,
+            SportId = video.SportId,
             SportName = video.Sport?.Name,
             AthleteId = video.AthleteId,
             AthleteName = BuildFullName(video.Athlete.User.FirstName, video.Athlete.User.LastName),
@@ -56,6 +57,7 @@ public static class VideoResponseMapper
         {
             Id = video.Id,
             Title = video.Title,
+            SportId = video.SportId,
             SportName = video.Sport?.Name,
             AthleteId = video.AthleteId,
             AthleteName = BuildFullName(video.Athlete.User.FirstName, video.Athlete.User.LastName),

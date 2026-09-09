@@ -407,7 +407,8 @@ class _VideoControls extends StatefulWidget {
   State<_VideoControls> createState() => _VideoControlsState();
 }
 
-class _VideoControlsState extends State<_VideoControls> {
+class _VideoControlsState extends State<_VideoControls>
+    with SingleTickerProviderStateMixin {
   late final Player _player;
   final List<StreamSubscription<dynamic>> _subscriptions = [];
 
@@ -418,9 +419,21 @@ class _VideoControlsState extends State<_VideoControls> {
   bool _dragging = false;
   double _dragValue = 0;
 
+  bool _visible = true;
+  Timer? _hideTimer;
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+      value: 1,
+    );
+    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
+
     _player = widget.state.widget.controller.player;
     _position = _player.state.position;
     _duration = _player.state.duration;
@@ -439,6 +452,7 @@ class _VideoControlsState extends State<_VideoControls> {
       _player.stream.playing.listen((p) {
         if (mounted) {
           setState(() => _playing = p);
+          if (p) _scheduleHide();
         }
       }),
       _player.stream.buffering.listen((b) {
@@ -448,18 +462,61 @@ class _VideoControlsState extends State<_VideoControls> {
       }),
       _player.stream.completed.listen((done) {
         if (mounted && done) {
-          setState(() => _position = Duration.zero);
+          setState(() {
+            _position = Duration.zero;
+            _visible = true;
+          });
+          _fadeController.forward();
+          _cancelHide();
         }
       }),
     ]);
+    _scheduleHide();
   }
 
   @override
   void dispose() {
+    _hideTimer?.cancel();
+    _fadeController.dispose();
     for (final sub in _subscriptions) {
       sub.cancel();
     }
     super.dispose();
+  }
+
+  void _toggleVisibility() {
+    setState(() {
+      _visible = !_visible;
+    });
+    if (_visible) {
+      _fadeController.forward();
+      _scheduleHide();
+    } else {
+      _fadeController.reverse();
+      _cancelHide();
+    }
+  }
+
+  void _scheduleHide() {
+    _cancelHide();
+    _hideTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && _playing) {
+        setState(() => _visible = false);
+        _fadeController.reverse();
+      }
+    });
+  }
+
+  void _cancelHide() {
+    _hideTimer?.cancel();
+  }
+
+  void _onInteraction() {
+    if (_visible) {
+      _scheduleHide();
+    } else {
+      _toggleVisibility();
+    }
   }
 
   Duration get _maxDuration =>
@@ -476,6 +533,7 @@ class _VideoControlsState extends State<_VideoControls> {
     }
     setState(() => _position = target);
     _player.seek(target);
+    _scheduleHide();
   }
 
   void _onSeekChanged(double value) {
@@ -493,6 +551,7 @@ class _VideoControlsState extends State<_VideoControls> {
     _dragging = false;
     setState(() => _position = target);
     _player.seek(target);
+    _scheduleHide();
   }
 
   String _fmt(Duration d) {
@@ -516,124 +575,144 @@ class _VideoControlsState extends State<_VideoControls> {
   @override
   Widget build(BuildContext context) {
     final white = Colors.white;
-    return Material(
-      color: Colors.black38,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_buffering)
-            const Center(
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeWidth: 3,
+    return GestureDetector(
+      onTap: _onInteraction,
+      behavior: HitTestBehavior.opaque,
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_buffering)
+              const Center(
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    strokeWidth: 3,
+                  ),
                 ),
               ),
-            ),
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ControlButton(
-                  tooltip: 'Back 10 seconds',
-                  icon: Icons.replay_10,
-                  color: white,
-                  onPressed: () => _seekBy(-10),
-                ),
-                const SizedBox(width: 12),
-                IconButton(
-                  tooltip: _playing ? 'Pause' : 'Play',
-                  onPressed: _player.playOrPause,
-                  iconSize: 72,
-                  color: white,
-                  icon: Icon(
-                    _playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                    size: 72,
-                    color: white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                _ControlButton(
-                  tooltip: 'Forward 10 seconds',
-                  icon: Icons.forward_10,
-                  color: white,
-                  onPressed: () => _seekBy(10),
-                ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              color: Colors.black54,
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SliderTheme(
-                    data: SliderThemeData(
-                      trackHeight: 3,
-                      activeTrackColor: Colors.redAccent,
-                      inactiveTrackColor: Colors.white30,
-                      thumbColor: Colors.redAccent,
-                      overlayShape: SliderComponentShape.noOverlay,
-                    ),
-                    child: Slider(
-                      min: 0,
-                      max: _sliderMax,
-                      value: _displayMs.clamp(0.0, _sliderMax),
-                      onChangeStart: (_) => setState(() => _dragging = true),
-                      onChanged: _onSeekChanged,
-                      onChangeEnd: _onSeekEnd,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        Text(
-                          _fmt(_position),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: IgnorePointer(
+                ignoring: !_visible,
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _ControlButton(
+                            tooltip: 'Back 10 seconds',
+                            icon: Icons.replay_10,
+                            color: white,
+                            onPressed: () => _seekBy(-10),
                           ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          _fmt(_maxDuration),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
+                          const SizedBox(width: 12),
+                          IconButton(
+                            tooltip: _playing ? 'Pause' : 'Play',
+                            onPressed: () {
+                              _player.playOrPause();
+                              _scheduleHide();
+                            },
+                            iconSize: 72,
+                            color: white,
+                            icon: Icon(
+                              _playing
+                                  ? Icons.pause_circle_filled
+                                  : Icons.play_circle_fill,
+                              size: 72,
+                              color: white,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Spacer(),
-                      _ControlButton(
-                        tooltip: widget.state.isFullscreen()
-                            ? 'Exit fullscreen'
-                            : 'Enter fullscreen',
-                        icon: widget.state.isFullscreen()
-                            ? Icons.fullscreen_exit
-                            : Icons.fullscreen,
-                        color: white,
-                        onPressed: () => widget.state.isFullscreen()
-                            ? widget.state.exitFullscreen()
-                            : widget.state.enterFullscreen(),
+                          const SizedBox(width: 12),
+                          _ControlButton(
+                            tooltip: 'Forward 10 seconds',
+                            icon: Icons.forward_10,
+                            color: white,
+                            onPressed: () => _seekBy(10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const Spacer(),
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black54],
+                        ),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SliderTheme(
+                            data: SliderThemeData(
+                              trackHeight: 3,
+                              activeTrackColor: Colors.redAccent,
+                              inactiveTrackColor: Colors.white30,
+                              thumbColor: Colors.redAccent,
+                              overlayShape: SliderComponentShape.noOverlay,
+                            ),
+                            child: Slider(
+                              min: 0,
+                              max: _sliderMax,
+                              value: _displayMs.clamp(0.0, _sliderMax),
+                              onChangeStart: (_) =>
+                                  setState(() => _dragging = true),
+                              onChanged: _onSeekChanged,
+                              onChangeEnd: _onSeekEnd,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _fmt(_position),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  _fmt(_maxDuration),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _ControlButton(
+                                  tooltip: widget.state.isFullscreen()
+                                      ? 'Exit fullscreen'
+                                      : 'Enter fullscreen',
+                                  icon: widget.state.isFullscreen()
+                                      ? Icons.fullscreen_exit
+                                      : Icons.fullscreen,
+                                  color: white,
+                                  onPressed: () => widget.state.isFullscreen()
+                                      ? widget.state.exitFullscreen()
+                                      : widget.state.enterFullscreen(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -856,7 +935,7 @@ class _CommentBubbleState extends State<_CommentBubble> {
   @override
   Widget build(BuildContext context) {
     final isOwn = comment.isOwnComment;
-    final showActions = isOwn && widget.role == VideoRole.coach && !_editing;
+    final showActions = isOwn && !_editing;
 
     final bubbleColor = isDeleted()
         ? AuthPalette.border(context).withValues(alpha: 0.4)
@@ -1082,6 +1161,14 @@ class _VoiceNoteBubbleState extends State<_VoiceNoteBubble> {
     }
   }
 
+  Future<void> _seekTo(double value) async {
+    try {
+      await _player.seek(Duration(milliseconds: value.round()));
+    } catch (_) {
+      // Ignore seek errors; playback is unaffected.
+    }
+  }
+
   @override
   void dispose() {
     for (final sub in _subscriptions) {
@@ -1108,9 +1195,10 @@ class _VoiceNoteBubbleState extends State<_VoiceNoteBubble> {
     }
 
     final duration = _duration ?? Duration(seconds: widget.comment.voiceNoteDurationSeconds ?? 0);
-    final progress = duration.inMilliseconds == 0
-        ? 0.0
-        : (_position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+    final maxMs = duration.inMilliseconds.clamp(0, 1 << 30).toDouble();
+    final value = _position.inMilliseconds
+        .clamp(0.0, maxMs > 0 ? maxMs : 1)
+        .toDouble();
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1118,12 +1206,27 @@ class _VoiceNoteBubbleState extends State<_VoiceNoteBubble> {
         _WaveformPlaceholder(),
         const SizedBox(width: AppSpacing.sm),
         SizedBox(
-          width: 64,
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AuthPalette.divider(context),
-            color: AuthPalette.red,
-            minHeight: 3,
+          width: 96,
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 3,
+              activeTrackColor: AuthPalette.red,
+              inactiveTrackColor: AuthPalette.divider(context),
+              thumbColor: AuthPalette.red,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+              overlayShape: SliderComponentShape.noOverlay,
+            ),
+            child: Slider(
+              min: 0,
+              max: maxMs > 0 ? maxMs : 1,
+              value: value,
+              onChanged: (v) {
+                setState(
+                  () => _position = Duration(milliseconds: v.round()),
+                );
+              },
+              onChangeEnd: _seekTo,
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -1143,9 +1246,9 @@ class _VoiceNoteBubbleState extends State<_VoiceNoteBubble> {
           icon: Icon(
             _loading
                 ? Icons.hourglass_top
-: _playing
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
+                : _playing
+                    ? Icons.pause_circle_filled
+                    : Icons.play_circle_fill,
             color: AuthPalette.red,
             size: 26,
           ),

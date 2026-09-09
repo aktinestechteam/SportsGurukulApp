@@ -4,6 +4,7 @@ class VideoSubmission {
   const VideoSubmission({
     required this.id,
     required this.title,
+    this.sportId,
     this.sportName,
     this.athleteId,
     required this.athleteName,
@@ -17,6 +18,7 @@ class VideoSubmission {
 
   final String id;
   final String title;
+  final String? sportId;
   final String? sportName;
   final String? athleteId;
   final String athleteName;
@@ -31,6 +33,7 @@ class VideoSubmission {
     return VideoSubmission(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
+      sportId: json['sportId'] as String?,
       sportName: json['sportName'] as String?,
       athleteId: json['athleteId'] as String?,
       athleteName: json['athleteName'] as String? ?? '',
@@ -46,6 +49,7 @@ class VideoSubmission {
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
+    'sportId': sportId,
     'sportName': sportName,
     'athleteId': athleteId,
     'athleteName': athleteName,
@@ -62,6 +66,7 @@ class VideoDetail {
   const VideoDetail({
     required this.id,
     required this.title,
+    this.sportId,
     this.sportName,
     this.athleteId,
     required this.athleteName,
@@ -78,6 +83,7 @@ class VideoDetail {
 
   final String id;
   final String title;
+  final String? sportId;
   final String? sportName;
   final String? athleteId;
   final String athleteName;
@@ -95,6 +101,7 @@ class VideoDetail {
     return VideoDetail(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
+      sportId: json['sportId'] as String?,
       sportName: json['sportName'] as String?,
       athleteId: json['athleteId'] as String?,
       athleteName: json['athleteName'] as String? ?? '',
@@ -115,6 +122,7 @@ class VideoDetail {
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
+    'sportId': sportId,
     'sportName': sportName,
     'athleteId': athleteId,
     'athleteName': athleteName,
@@ -133,6 +141,7 @@ class VideoDetail {
     return VideoSubmission(
       id: id,
       title: title,
+      sportId: sportId,
       sportName: sportName,
       athleteId: athleteId,
       athleteName: athleteName,
@@ -154,6 +163,7 @@ class VideoDetail {
     return VideoDetail(
       id: id,
       title: title,
+      sportId: sportId,
       sportName: sportName,
       athleteId: athleteId,
       athleteName: athleteName,

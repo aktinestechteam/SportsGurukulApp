@@ -1,40 +1,90 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:video_player/video_player.dart';
 
-/// Extracts a thumbnail frame from a local video file using bundled ffmpeg.
+/// Generates a thumbnail from a video file on mobile.
 ///
-/// Runs ffmpeg on a mobile device to grab a single frame near [offset] and
-/// returns the JPEG bytes plus their format. Returns `null` when the video
-/// cannot be decoded or no frame could be captured.
+/// Uses [VideoPlayerController] to render a single frame off-screen via an
+/// [OverlayEntry] and captures it with a [RepaintBoundary].
 Future<({List<int> bytes, String format})?> generateVideoThumbnail(
   String videoPath, {
   Duration offset = const Duration(seconds: 1),
+  BuildContext? context,
 }) async {
-  try {
-    final tempDir = await getTemporaryDirectory();
-    final outPath =
-        '${tempDir.path}/thumb_${DateTime.now().millisecondsSinceEpoch}.jpg';
+  if (context == null) return null;
 
-    for (final seconds in [offset.inSeconds, 0]) {
-      final command =
-          '-ss $seconds -i $videoPath -frames:v 1 -vf scale=-2:360 -q:v 5 -y $outPath';
-      final session = await FFmpegKit.execute(command);
-      final returnCode = await session.getReturnCode();
-      final outputFile = File(outPath);
-      if (ReturnCode.isSuccess(returnCode) && await outputFile.exists()) {
-        final length = await outputFile.length();
-        if (length > 0) {
-          final bytes = await outputFile.readAsBytes();
-          await outputFile.delete().catchError((_) => outputFile);
-          return (bytes: bytes, format: 'jpg');
-        }
+  // Capture the overlay state before any async gaps to satisfy the linter.
+  final overlayState = Overlay.of(context, rootOverlay: true);
+
+  final controller = VideoPlayerController.file(File(videoPath));
+  try {
+    await controller.initialize();
+    await controller.seekTo(offset);
+    // Allow the first frame to render after seeking.
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    final key = GlobalKey();
+    final completer = Completer<({List<int> bytes, String format})?>();
+
+    late OverlayEntry overlay;
+    overlay = OverlayEntry(
+      builder: (_) => Positioned(
+        left: -1000,
+        top: -1000,
+        child: RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            width: 640,
+            height: 360,
+            child: ClipRect(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: controller.value.size.width,
+                  height: controller.value.size.height,
+                  child: VideoPlayer(controller),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlayState.insert(overlay);
+
+    // Give the platform texture time to paint into the off-screen area.
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final boundary =
+        key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) {
+      overlay.remove();
+      completer.complete(null);
+    } else {
+      final image = await boundary.toImage(pixelRatio: 1.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      overlay.remove();
+
+      if (byteData != null) {
+        completer.complete((
+          bytes: byteData.buffer.asUint8List(),
+          format: 'png',
+        ));
+      } else {
+        completer.complete(null);
       }
     }
+
+    return completer.future;
   } catch (_) {
-    // Fall back to no thumbnail.
+    return null;
+  } finally {
+    controller.dispose();
   }
-  return null;
 }

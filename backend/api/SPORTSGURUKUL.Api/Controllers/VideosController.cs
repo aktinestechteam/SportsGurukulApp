@@ -196,6 +196,7 @@ public class VideosController : ControllerBase
         {
             Id = detail.Id,
             Title = detail.Title,
+            SportId = detail.SportId,
             SportName = detail.SportName,
             AthleteName = detail.AthleteName,
             ThumbnailUrl = detail.ThumbnailUrl,

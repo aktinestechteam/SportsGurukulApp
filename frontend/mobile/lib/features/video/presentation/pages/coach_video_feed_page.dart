@@ -245,10 +245,12 @@ class _CoachVideoFeedPageState extends State<CoachVideoFeedPage> {
     final seen = <String>{};
     final result = <_FilterItem>[];
     for (final v in videos) {
+      final id = v.sportId;
       final name = v.sportName;
-      if (name == null || name.isEmpty || seen.contains(name)) continue;
-      seen.add(name);
-      result.add(_FilterItem(name, null));
+      if (id == null || id.isEmpty || name == null || name.isEmpty) continue;
+      if (seen.contains(id)) continue;
+      seen.add(id);
+      result.add(_FilterItem(name, id));
     }
     return result;
   }

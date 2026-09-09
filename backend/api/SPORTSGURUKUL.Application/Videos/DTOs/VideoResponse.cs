@@ -4,6 +4,7 @@ public sealed class VideoSummaryResponse
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public Guid? SportId { get; set; }
     public string? SportName { get; set; }
     public Guid? AthleteId { get; set; }
     public string AthleteName { get; set; } = string.Empty;
@@ -19,6 +20,7 @@ public sealed class VideoDetailResponse
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public Guid? SportId { get; set; }
     public string? SportName { get; set; }
     public Guid? AthleteId { get; set; }
     public string AthleteName { get; set; } = string.Empty;

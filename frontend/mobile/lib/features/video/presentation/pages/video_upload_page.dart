@@ -128,7 +128,7 @@ class _VideoUploadPageState extends State<VideoUploadPage>
   }
 
   Future<void> _captureThumbnail(String path) async {
-    final thumb = await generateVideoThumbnail(path);
+    final thumb = await generateVideoThumbnail(path, context: context);
     if (thumb == null || !mounted) {
       return;
     }
